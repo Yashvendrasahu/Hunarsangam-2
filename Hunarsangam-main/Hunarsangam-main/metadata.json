@@ -1,6 +1,0 @@
-{
-  "name": "HunarSangam Artisan Platform",
-  "description": "Production-ready Flutter & Dart application for HunarSangam artisan platform featuring Onboarding, Role Selection, Bulk Buyer Registration (Steps 1, 2, 3), Home Dashboard, and full Bulk Buyer Discovery suite (d1-d6: Discover, Voice Search, Results, Featured Artisans, Artisan Profile, Business Sourcing).",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
