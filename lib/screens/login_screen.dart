@@ -2,17 +2,19 @@
 
 import 'package:flutter/material.dart';
 import '../models/onboarding_state.dart';
+import '../models/buyer_onboarding_model.dart';
 import '../services/auth_service.dart';
 import '../widgets/brand_logo_card.dart';
 import 'artisan_home_screen.dart';
 
-/// Screen matching 'ar-Artisan- login.png'
-/// Allows registered artisans to sign into their account, validates credentials,
-/// sets up the active session state, and seamlessly redirects directly to the Artisan Home Dashboard screen.
+/// Dynamic Login Screen supporting Artisan & Bulk Buyer Login,
+/// Phone OTP verification, Password authentication, Quick Demo credentials,
+/// and bidirectional session redirection.
 class LoginScreen extends StatefulWidget {
   final OnboardingState? initialState;
   final VoidCallback? onLoginSuccess;
   final ValueChanged<OnboardingState>? onLoginSuccessWithState;
+  final ValueChanged<BuyerOnboardingModel>? onBuyerLoginSuccess;
   final VoidCallback? onCreateAccount;
   final VoidCallback? onBack;
   final String currentLanguage;
@@ -22,6 +24,7 @@ class LoginScreen extends StatefulWidget {
     this.initialState,
     this.onLoginSuccess,
     this.onLoginSuccessWithState,
+    this.onBuyerLoginSuccess,
     this.onCreateAccount,
     this.onBack,
     this.currentLanguage = 'English',
@@ -32,25 +35,25 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _contactController =
-      TextEditingController(text: 'ramukumar@hunarsangam.in');
-  final TextEditingController _passwordController =
-      TextEditingController(text: 'password123');
+  final TextEditingController _contactController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
 
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isBuyerRole = false;
+  bool _useOtpMode = false;
+  bool _otpSent = false;
+  String? _generatedOtp;
   bool _obscurePassword = true;
   bool _isLoading = false;
   String _selectedLanguage = 'English';
-  String? _contactError;
-  String? _passwordError;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _selectedLanguage = widget.currentLanguage;
     if (widget.initialState != null &&
-        (widget.initialState!.email.isNotEmpty ||
-            widget.initialState!.phoneNumber.isNotEmpty)) {
+        (widget.initialState!.email.isNotEmpty || widget.initialState!.phoneNumber.isNotEmpty)) {
       _contactController.text = widget.initialState!.email.isNotEmpty
           ? widget.initialState!.email
           : widget.initialState!.phoneNumber;
@@ -61,139 +64,204 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _contactController.dispose();
     _passwordController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
-  bool _validateInputs() {
+  void _fillDemoArtisan() {
     setState(() {
-      _contactError = null;
-      _passwordError = null;
+      _isBuyerRole = false;
+      _useOtpMode = false;
+      _contactController.text = 'ramukumar@hunarsangam.in';
+      _passwordController.text = 'password123';
+      _errorMessage = null;
     });
-
-    final contact = _contactController.text.trim();
-    final password = _passwordController.text.trim();
-
-    bool isValid = true;
-
-    if (contact.isEmpty) {
-      setState(() {
-        _contactError = 'Please enter your email or phone number';
-      });
-      isValid = false;
-    } else if (contact.contains('@') &&
-        !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(contact)) {
-      setState(() {
-        _contactError = 'Please enter a valid email address';
-      });
-      isValid = false;
-    } else if (!contact.contains('@') && contact.length < 8) {
-      setState(() {
-        _contactError = 'Phone number must be at least 8 digits';
-      });
-      isValid = false;
-    }
-
-    if (password.isEmpty) {
-      setState(() {
-        _passwordError = 'Please enter your password';
-      });
-      isValid = false;
-    } else if (password.length < 6) {
-      setState(() {
-        _passwordError = 'Password must be at least 6 characters (8 recommended)';
-      });
-      isValid = false;
-    }
-
-    return isValid;
   }
 
-  Future<void> _handleLogin() async {
-    FocusScope.of(context).unfocus();
+  void _fillDemoBuyer() {
+    setState(() {
+      _isBuyerRole = true;
+      _useOtpMode = false;
+      _contactController.text = 'buyer@fabcraft.in';
+      _passwordController.text = 'password123';
+      _errorMessage = null;
+    });
+  }
 
-    if (!_validateInputs()) {
+  Future<void> _handleSendOtp() async {
+    final contact = _contactController.text.trim();
+    if (contact.isEmpty) {
+      setState(() => _errorMessage = 'Please enter your phone number to receive OTP');
       return;
     }
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
-    // Authenticate via Supabase AuthService
-    try {
-      await AuthService().loginWithEmailOrPhone(
-        contact: _contactController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-    } catch (_) {}
+    final otp = await AuthService().sendOtp(phone: contact);
 
     if (!mounted) return;
-
-    final contact = _contactController.text.trim();
-    final isEmail = contact.contains('@');
-
-    // Build the validated active user session state
-    final baseState = widget.initialState ?? const OnboardingState();
-    final updatedSessionState = baseState.copyWith(
-      email: isEmail ? contact : (baseState.email.isNotEmpty ? baseState.email : 'ramukumar@hunarsangam.in'),
-      phoneNumber: !isEmail ? contact : (baseState.phoneNumber.isNotEmpty ? baseState.phoneNumber : '+91 98765 43210'),
-      password: _passwordController.text.trim(),
-      selectedLanguage: _selectedLanguage,
-      selectedRole: UserRole.artisan,
-      artisanName: baseState.artisanName.isNotEmpty ? baseState.artisanName : 'Ramu Kumar',
-      artisanLocation: baseState.artisanLocation.isNotEmpty ? baseState.artisanLocation : 'Barabanki, Uttar Pradesh',
-      experienceYears: baseState.experienceYears.isNotEmpty ? baseState.experienceYears : '10+ Years',
-      selectedCraftIds: baseState.selectedCraftIds.isNotEmpty ? baseState.selectedCraftIds : const ['bamboo_cane'],
-      bulkProductionReady: true,
-      hasProfilePhoto: true,
-    );
-
     setState(() {
       _isLoading = false;
+      _otpSent = true;
+      _generatedOtp = otp;
+      _otpController.text = otp; // Pre-fill for instant frictionless convenience
     });
 
-    // Show quick feedback banner
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 20.0),
-            const SizedBox(width: 10.0),
+            const Icon(Icons.sms_outlined, color: Colors.white, size: 20.0),
+            const SizedBox(width: 8.0),
             Expanded(
               child: Text(
-                'Welcome back, ${updatedSessionState.artisanName}!',
+                '📱 OTP sent: $otp (Auto-filled for testing)',
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ],
         ),
         backgroundColor: const Color(0xFF2E7D32),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 4),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       ),
     );
+  }
 
-    // 1. If parent coordinator callback with state is provided, notify it
-    if (widget.onLoginSuccessWithState != null) {
-      widget.onLoginSuccessWithState!(updatedSessionState);
+  Future<void> _handleLogin() async {
+    FocusScope.of(context).unfocus();
+    final contact = _contactController.text.trim();
+
+    if (contact.isEmpty) {
+      setState(() => _errorMessage = 'Please enter your email or phone number');
       return;
     }
 
-    // 2. If standard callback is provided, invoke it
-    if (widget.onLoginSuccess != null) {
-      widget.onLoginSuccess!();
-      return;
+    if (_useOtpMode) {
+      final otp = _otpController.text.trim();
+      if (otp.length < 4) {
+        setState(() => _errorMessage = 'Please enter the 6-digit OTP code');
+        return;
+      }
+    } else {
+      final password = _passwordController.text.trim();
+      if (password.isEmpty) {
+        setState(() => _errorMessage = 'Please enter your password');
+        return;
+      }
     }
 
-    // 3. Fallback: Seamless direct navigation to ArtisanHomeScreen via Navigator
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => ArtisanHomeScreen(
-          state: updatedSessionState,
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      if (_useOtpMode) {
+        await AuthService().verifyOtp(
+          phone: contact,
+          otp: _otpController.text.trim(),
+          role: _isBuyerRole ? 'buyer' : 'artisan',
+        );
+      } else {
+        await AuthService().loginWithEmailOrPhone(
+          contact: contact,
+          password: _passwordController.text.trim(),
+          preferredRole: _isBuyerRole ? 'buyer' : 'artisan',
+        );
+      }
+
+      if (!mounted) return;
+
+      final isEmail = contact.contains('@');
+      final authUser = AuthService().currentUser;
+
+      if (_isBuyerRole) {
+        final buyerModel = AuthService().currentBuyer ??
+            BuyerOnboardingModel(
+              yourName: authUser?.name.isNotEmpty == true ? authUser!.name : 'Vikram Mehra',
+              businessName: 'FabCraft Living & Export',
+              workEmail: isEmail ? contact : 'buyer@fabcraft.in',
+              phoneNumber: !isEmail ? contact : '+91 98111 22334',
+            );
+
+        setState(() => _isLoading = false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('🎉 Welcome back, ${buyerModel.yourName}!'),
+            backgroundColor: const Color(0xFF2E7D32),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+
+        if (widget.onBuyerLoginSuccess != null) {
+          widget.onBuyerLoginSuccess!(buyerModel);
+          return;
+        }
+      }
+
+      // Artisan flow
+      final baseState = widget.initialState ?? const OnboardingState();
+      final artisanProfile = AuthService().currentArtisan;
+
+      final updatedSessionState = baseState.copyWith(
+        email: isEmail ? contact : (artisanProfile?.email ?? baseState.email),
+        phoneNumber: !isEmail ? contact : (artisanProfile?.phone ?? baseState.phoneNumber),
+        password: _passwordController.text.trim(),
+        selectedLanguage: _selectedLanguage,
+        selectedRole: UserRole.artisan,
+        artisanName: artisanProfile?.name.isNotEmpty == true
+            ? artisanProfile!.name
+            : (baseState.artisanName.isNotEmpty ? baseState.artisanName : 'Ramu Kumar'),
+        artisanLocation: artisanProfile?.location.isNotEmpty == true
+            ? artisanProfile!.location
+            : (baseState.artisanLocation.isNotEmpty ? baseState.artisanLocation : 'Barabanki, Uttar Pradesh'),
+        experienceYears: artisanProfile?.experienceYears ?? '10+ Years',
+        selectedCraftIds: baseState.selectedCraftIds.isNotEmpty ? baseState.selectedCraftIds : const ['bamboo_cane'],
+        bulkProductionReady: true,
+        hasProfilePhoto: true,
+      );
+
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('🎉 Welcome back, ${updatedSessionState.artisanName}!'),
+          backgroundColor: const Color(0xFF2E7D32),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
         ),
-      ),
-    );
+      );
+
+      if (widget.onLoginSuccessWithState != null) {
+        widget.onLoginSuccessWithState!(updatedSessionState);
+        return;
+      }
+
+      if (widget.onLoginSuccess != null) {
+        widget.onLoginSuccess!();
+        return;
+      }
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => ArtisanHomeScreen(
+            state: updatedSessionState,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Login failed. Please check credentials.';
+      });
+    }
   }
 
   @override
@@ -203,250 +271,188 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top App Bar with back navigation, logo & language pill
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Back button
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Color(0xFF2D2421)),
-                    onPressed: widget.onBack ?? widget.onCreateAccount,
-                    splashRadius: 22.0,
-                  ),
-
-                  // Center brand logo + title
-                  const HunarSangamLogoBadge(
-                    size: 34.0,
-                    showText: true,
-                  ),
-
-                  // Language dropdown pill
-                  PopupMenuButton<String>(
-                    onSelected: (val) {
-                      setState(() {
-                        _selectedLanguage = val;
-                      });
-                    },
-                    itemBuilder: (ctx) => [
-                      const PopupMenuItem(value: 'English', child: Text('English')),
-                      const PopupMenuItem(value: 'हिंदी / Hindi', child: Text('हिंदी / Hindi')),
-                      const PopupMenuItem(value: 'অসমীয়া / Assamese', child: Text('অসমীয়া / Assamese')),
-                      const PopupMenuItem(value: 'বাংলা / Bengali', child: Text('বাংলা / Bengali')),
-                    ],
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFDFB),
-                        borderRadius: BorderRadius.circular(16.0),
-                        border: Border.all(color: const Color(0xFFE5D5CB)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _selectedLanguage,
-                            style: const TextStyle(
-                              fontSize: 12.0,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF4A372D),
-                            ),
-                          ),
-                          const SizedBox(width: 4.0),
-                          const Icon(
-                            Icons.arrow_drop_down,
-                            size: 16.0,
-                            color: Color(0xFF7B665C),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Top Bar with back, logo, language
+            _buildTopBar(),
 
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8.0),
 
-                      // Three decorative flourish dots
-                      Row(
-                        children: const [
-                          _LoginFlourishDot(color: Color(0xFFB85324)),
-                          SizedBox(width: 6.0),
-                          _LoginFlourishDot(color: Color(0xFF2E7D32)),
-                          SizedBox(width: 6.0),
-                          _LoginFlourishDot(color: Color(0xFFB85324)),
-                        ],
+                    // Role Switcher Tabs (Artisan vs Bulk Buyer)
+                    _buildRoleToggleTabs(),
+
+                    const SizedBox(height: 20.0),
+
+                    Text(
+                      _isBuyerRole ? 'Enterprise Buyer Login' : 'Artisan Sign In / लॉगिन करें',
+                      style: const TextStyle(
+                        fontSize: 26.0,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF221C19),
+                        letterSpacing: -0.5,
                       ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    Text(
+                      _isBuyerRole
+                          ? 'Access verified artisan clusters, place bulk RFQs & track escrow orders.'
+                          : 'Manage your craft listings, view buyer purchase orders & production progress.',
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        color: Color(0xFF6B584E),
+                        height: 1.35,
+                      ),
+                    ),
 
+                    const SizedBox(height: 14.0),
+
+                    // Quick Demo Credentials Fill Chips
+                    _buildQuickDemoChips(),
+
+                    if (_errorMessage != null) ...[
                       const SizedBox(height: 14.0),
-
-                      // Title
-                      const Text(
-                        'Login Your Account',
-                        style: TextStyle(
-                          fontSize: 30.0,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF221C19),
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-
-                      const SizedBox(height: 6.0),
-
-                      // Subtitle
-                      const Text(
-                        'Enter your contact details to login.',
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          color: Color(0xFF7A685F),
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-
-                      const SizedBox(height: 28.0),
-
-                      // Field 1: Email Address / Phone number
-                      const Text(
-                        'Email Address / Phone number',
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF2D2421),
-                        ),
-                      ),
-                      const SizedBox(height: 8.0),
                       Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF5EBE1),
-                          borderRadius: BorderRadius.circular(16.0),
-                          border: Border.all(
-                            color: _contactError != null
-                                ? const Color(0xFFD32F2F)
-                                : const Color(0xFFE8DDD5),
-                            width: _contactError != null ? 1.5 : 1.0,
-                          ),
+                          color: const Color(0xFFFFEBEE),
+                          borderRadius: BorderRadius.circular(12.0),
+                          border: Border.all(color: const Color(0xFFFFCDD2)),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 2.0),
                         child: Row(
                           children: [
-                            const Icon(Icons.mail_outline_rounded, color: Color(0xFF8A776D), size: 20.0),
-                            const SizedBox(width: 12.0),
+                            const Icon(Icons.error_outline, color: Color(0xFFC62828), size: 18.0),
+                            const SizedBox(width: 8.0),
                             Expanded(
-                              child: TextField(
-                                controller: _contactController,
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.next,
+                              child: Text(
+                                _errorMessage!,
                                 style: const TextStyle(
-                                  fontSize: 14.0,
-                                  color: Color(0xFF2D2421),
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12.5,
+                                  color: Color(0xFFC62828),
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                decoration: const InputDecoration(
-                                  hintText: 'Enter your email address / phone number',
-                                  hintStyle: TextStyle(
-                                    fontSize: 13.5,
-                                    color: Color(0xFF9E8D84),
-                                  ),
-                                  border: InputBorder.none,
-                                ),
-                                onChanged: (_) {
-                                  if (_contactError != null) {
-                                    setState(() {
-                                      _contactError = null;
-                                    });
-                                  }
-                                },
                               ),
                             ),
                           ],
                         ),
                       ),
-                      if (_contactError != null) ...[
-                        const SizedBox(height: 6.0),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4.0),
-                          child: Text(
-                            _contactError!,
-                            style: const TextStyle(
-                              fontSize: 12.0,
-                              color: Color(0xFFD32F2F),
-                              fontWeight: FontWeight.w600,
+                    ],
+
+                    const SizedBox(height: 18.0),
+
+                    // Contact Input (Email or Phone)
+                    Text(
+                      _useOtpMode ? 'Phone Number / मोबाइल नंबर' : 'Email or Phone / ईमेल या मोबाइल',
+                      style: const TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2D2421),
+                      ),
+                    ),
+                    const SizedBox(height: 6.0),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF6ECE5),
+                        borderRadius: BorderRadius.circular(16.0),
+                        border: Border.all(color: const Color(0xFFE5D5CB)),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _useOtpMode ? Icons.phone_outlined : Icons.person_outline_rounded,
+                            color: const Color(0xFF6B584E),
+                            size: 20.0,
+                          ),
+                          const SizedBox(width: 12.0),
+                          Expanded(
+                            child: TextField(
+                              controller: _contactController,
+                              keyboardType: _useOtpMode ? TextInputType.phone : TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                hintText: _useOtpMode
+                                    ? 'Enter 10-digit mobile number'
+                                    : 'Enter email or registered phone',
+                                hintStyle: const TextStyle(
+                                  fontSize: 14.0,
+                                  color: Color(0xFF9E8D84),
+                                ),
+                                border: InputBorder.none,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 22.0),
-
-                      // Field 2: Password
-                      const Text(
-                        'Create Password',
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF2D2421),
-                        ),
+                          if (_contactController.text.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(Icons.clear, size: 18.0, color: Color(0xFF9E8D84)),
+                              onPressed: () => setState(() => _contactController.clear()),
+                            ),
+                        ],
                       ),
-                      const SizedBox(height: 8.0),
+                    ),
+
+                    const SizedBox(height: 16.0),
+
+                    // Password or OTP Field
+                    if (!_useOtpMode) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Password / पासवर्ड',
+                            style: TextStyle(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF2D2421),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => setState(() => _useOtpMode = true),
+                            style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                            child: const Text(
+                              'Login via OTP instead',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFA84318),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4.0),
                       Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF5EBE1),
+                          color: const Color(0xFFF6ECE5),
                           borderRadius: BorderRadius.circular(16.0),
-                          border: Border.all(
-                            color: _passwordError != null
-                                ? const Color(0xFFD32F2F)
-                                : const Color(0xFFE8DDD5),
-                            width: _passwordError != null ? 1.5 : 1.0,
-                          ),
+                          border: Border.all(color: const Color(0xFFE5D5CB)),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 2.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 14.0),
                         child: Row(
                           children: [
-                            const Icon(Icons.lock_outline_rounded, color: Color(0xFF8A776D), size: 20.0),
+                            const Icon(Icons.lock_outline_rounded, color: Color(0xFF6B584E), size: 20.0),
                             const SizedBox(width: 12.0),
                             Expanded(
                               child: TextField(
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
-                                textInputAction: TextInputAction.done,
-                                onSubmitted: (_) => _handleLogin(),
-                                style: const TextStyle(
-                                  fontSize: 14.0,
-                                  color: Color(0xFF2D2421),
-                                  fontWeight: FontWeight.w500,
-                                ),
                                 decoration: const InputDecoration(
-                                  hintText: 'Enter a password',
+                                  hintText: 'Enter your password',
                                   hintStyle: TextStyle(
-                                    fontSize: 13.5,
+                                    fontSize: 14.0,
                                     color: Color(0xFF9E8D84),
                                   ),
                                   border: InputBorder.none,
                                 ),
-                                onChanged: (_) {
-                                  if (_passwordError != null) {
-                                    setState(() {
-                                      _passwordError = null;
-                                    });
-                                  }
-                                },
                               ),
                             ),
                             IconButton(
                               icon: Icon(
                                 _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                color: const Color(0xFF8A776D),
+                                color: const Color(0xFF7A685F),
                                 size: 20.0,
                               ),
                               onPressed: () {
@@ -458,104 +464,159 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
-                      if (_passwordError != null) ...[
-                        const SizedBox(height: 6.0),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4.0),
-                          child: Text(
-                            _passwordError!,
-                            style: const TextStyle(
-                              fontSize: 12.0,
-                              color: Color(0xFFD32F2F),
-                              fontWeight: FontWeight.w600,
+                    ] else ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Enter 6-Digit OTP / ओटीपी कोड',
+                            style: TextStyle(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF2D2421),
                             ),
                           ),
-                        ),
-                      ] else ...[
-                        const SizedBox(height: 6.0),
-                        const Text(
-                          'Use at least 8 characters',
-                          style: TextStyle(
-                            fontSize: 12.0,
-                            color: Color(0xFF7A685F),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Bottom Orange CTA Button & Switch link
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54.0,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE87338),
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: const Color(0xFFE87338).withOpacity(0.7),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18.0),
-                        ),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 22.0,
-                              height: 22.0,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Text(
-                              'login',
+                          TextButton(
+                            onPressed: () => setState(() => _useOtpMode = false),
+                            style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                            child: const Text(
+                              'Use Password instead',
                               style: TextStyle(
-                                fontSize: 16.5,
+                                fontSize: 12.5,
                                 fontWeight: FontWeight.w700,
-                                letterSpacing: 0.3,
+                                color: Color(0xFFA84318),
                               ),
                             ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16.0),
-
-                  // "New here , create account Here"
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'New here , create account ',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          color: Color(0xFF2D2421),
-                          fontWeight: FontWeight.w500,
-                        ),
+                          ),
+                        ],
                       ),
-                      GestureDetector(
+                      const SizedBox(height: 4.0),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF6ECE5),
+                                borderRadius: BorderRadius.circular(16.0),
+                                border: Border.all(color: const Color(0xFFE5D5CB)),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.pin_outlined, color: Color(0xFF6B584E), size: 20.0),
+                                  const SizedBox(width: 12.0),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _otpController,
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        hintText: '6-digit OTP code',
+                                        hintStyle: TextStyle(
+                                          fontSize: 14.0,
+                                          color: Color(0xFF9E8D84),
+                                        ),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10.0),
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _handleSendOtp,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF8C3A16),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0)),
+                            ),
+                            child: Text(
+                              _otpSent ? 'Resend OTP' : 'Send OTP',
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.0),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+
+                    const SizedBox(height: 28.0),
+
+                    // Login Action Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _handleLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFA84318),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+                          elevation: 2,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20.0,
+                                width: 20.0,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _isBuyerRole ? 'Login to Buyer Hub' : 'Sign In / लॉगिन करें',
+                                    style: const TextStyle(
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                  const Icon(Icons.arrow_forward_rounded, size: 20.0),
+                                ],
+                              ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20.0),
+
+                    // Don't have an account? Create one
+                    Center(
+                      child: InkWell(
                         onTap: widget.onCreateAccount,
-                        child: const Text(
-                          'Here',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            color: Color(0xFF2563EB),
-                            fontWeight: FontWeight.w700,
-                            decoration: TextDecoration.underline,
+                        borderRadius: BorderRadius.circular(12.0),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                          child: RichText(
+                            text: const TextSpan(
+                              text: "Don't have an account yet? ",
+                              style: TextStyle(
+                                fontSize: 14.0,
+                                color: Color(0xFF6B584E),
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: 'Sign Up / खाता बनाएं',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFFB85324),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8.0),
-                ],
+                    ),
+
+                    const SizedBox(height: 20.0),
+                  ],
+                ),
               ),
             ),
           ],
@@ -563,22 +624,196 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
 
-class _LoginFlourishDot extends StatelessWidget {
-  final Color color;
-  const _LoginFlourishDot({required this.color});
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              if (widget.onBack != null)
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Color(0xFF2D2421)),
+                  onPressed: widget.onBack,
+                ),
+              const HunarSangamLogoBadge(size: 32.0, showText: true),
+            ],
+          ),
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 6.0,
-      height: 6.0,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
+          // Quick language selector
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3E7DF),
+              borderRadius: BorderRadius.circular(14.0),
+              border: Border.all(color: const Color(0xFFE5D5CB)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.language_rounded, size: 14.0, color: Color(0xFF8C3A16)),
+                const SizedBox(width: 4.0),
+                Text(
+                  _selectedLanguage == 'English' ? 'EN' : 'हिन्दी',
+                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFF8C3A16)),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
-}
 
+  Widget _buildRoleToggleTabs() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1E4DC),
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: const Color(0xFFE5D5CB)),
+      ),
+      padding: const EdgeInsets.all(4.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () => setState(() => _isBuyerRole = false),
+              borderRadius: BorderRadius.circular(12.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
+                decoration: BoxDecoration(
+                  color: !_isBuyerRole ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12.0),
+                  boxShadow: !_isBuyerRole
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 4.0,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.palette_outlined,
+                      size: 16.0,
+                      color: !_isBuyerRole ? const Color(0xFFA84318) : const Color(0xFF7A685F),
+                    ),
+                    const SizedBox(width: 6.0),
+                    Text(
+                      'Artisan / कारीगर',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: !_isBuyerRole ? const Color(0xFFA84318) : const Color(0xFF7A685F),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: InkWell(
+              onTap: () => setState(() => _isBuyerRole = true),
+              borderRadius: BorderRadius.circular(12.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
+                decoration: BoxDecoration(
+                  color: _isBuyerRole ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12.0),
+                  boxShadow: _isBuyerRole
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 4.0,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.storefront_outlined,
+                      size: 16.0,
+                      color: _isBuyerRole ? const Color(0xFFA84318) : const Color(0xFF7A685F),
+                    ),
+                    const SizedBox(width: 6.0),
+                    Text(
+                      'Bulk Buyer / खरीदार',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: _isBuyerRole ? const Color(0xFFA84318) : const Color(0xFF7A685F),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickDemoChips() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Quick Testing Demo Accounts:',
+          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF8C756B)),
+        ),
+        const SizedBox(height: 6.0),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _fillDemoArtisan,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+                  side: BorderSide(
+                    color: !_isBuyerRole ? const Color(0xFFA84318) : const Color(0xFFE5D5CB),
+                    width: 1.2,
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                  backgroundColor: !_isBuyerRole ? const Color(0xFFFFF2EC) : Colors.white,
+                ),
+                child: const Text(
+                  '🎨 Artisan (Ramu)',
+                  style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w700, color: Color(0xFF2D2421)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8.0),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _fillDemoBuyer,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+                  side: BorderSide(
+                    color: _isBuyerRole ? const Color(0xFFA84318) : const Color(0xFFE5D5CB),
+                    width: 1.2,
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                  backgroundColor: _isBuyerRole ? const Color(0xFFFFF2EC) : Colors.white,
+                ),
+                child: const Text(
+                  '🏢 Buyer (FabCraft)',
+                  style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w700, color: Color(0xFF2D2421)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}

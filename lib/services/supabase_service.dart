@@ -1,9 +1,27 @@
 // lib/services/supabase_service.dart
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_config.dart';
+
+class UuidUtil {
+  static String generateV4() {
+    final random = Random();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // Version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // Variant 10
+    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}';
+  }
+
+  static bool isValidUuid(String? str) {
+    if (str == null) return false;
+    final uuidRegex = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+    return uuidRegex.hasMatch(str);
+  }
+}
 
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
@@ -104,7 +122,7 @@ class SupabaseService {
     Map<String, dynamic> record,
   ) async {
     if (!SupabaseConfig.isConfigured) {
-      return {'id': 'mock_${DateTime.now().millisecondsSinceEpoch}', ...record};
+      return {'id': UuidUtil.generateV4(), ...record};
     }
 
     try {
@@ -135,9 +153,188 @@ class SupabaseService {
     }
   }
 
+  Future<Map<String, dynamic>?> upsertRecord(
+    String tableName,
+    Map<String, dynamic> record, {
+    String onConflict = '',
+  }) async {
+    if (!SupabaseConfig.isConfigured) {
+      return {'id': UuidUtil.generateV4(), ...record};
+    }
+
+    try {
+      final c = client;
+      if (c != null) {
+        try {
+          final res = await c.from(tableName).upsert(
+            record,
+            onConflict: onConflict.isNotEmpty ? onConflict : null,
+          ).select();
+          if (res.isNotEmpty) {
+            return res.first;
+          }
+          return record;
+        } catch (e) {
+          if (kDebugMode) {
+            print('[SupabaseService] Client upsert note on $tableName: $e, using REST');
+          }
+        }
+      }
+
+      var url = '${SupabaseConfig.supabaseUrl}/rest/v1/$tableName';
+      if (onConflict.isNotEmpty) {
+        url += '?on_conflict=$onConflict';
+      }
+      final uri = Uri.parse(url);
+      final headers = Map<String, String>.from(_headers);
+      headers['Prefer'] = 'resolution=merge-duplicates,return=representation';
+
+      final response = await http.post(
+        uri,
+        headers: headers,
+        body: jsonEncode(record),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = jsonDecode(response.body);
+        if (data is List && data.isNotEmpty) {
+          return data.first as Map<String, dynamic>;
+        }
+        return record;
+      } else {
+        if (kDebugMode) {
+          print('[SupabaseService] Upsert $tableName error ${response.statusCode}: ${response.body}');
+        }
+        return null;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('[SupabaseService] Network error upserting into $tableName: $e');
+      }
+      return null;
+    }
+  }
+
   // ---------------------------------------------------------
-  // 1. Profiles Table Operations
+  // 1. Profiles & Account Registration Operations
   // ---------------------------------------------------------
+
+  /// Comprehensive user registration and sync to Supabase:
+  /// 1. Tries Supabase Auth (auth.signUp) so user appears in Supabase Auth tab
+  /// 2. Creates or upserts row in 'profiles' table (id, user_id, name, phone, email, profile_image, role)
+  /// 3. If role is artisan, creates or upserts row in 'artisans' table
+  Future<Map<String, dynamic>> syncUserAccount({
+    required String name,
+    required String phone,
+    required String email,
+    String? password,
+    String role = 'artisan',
+    String? profileImage,
+    Map<String, dynamic>? artisanDetails,
+  }) async {
+    String finalUserId = '';
+    final cleanPhone = phone.trim();
+    final cleanEmail = email.trim().isNotEmpty
+        ? email.trim().toLowerCase()
+        : (cleanPhone.isNotEmpty
+            ? '${cleanPhone.replaceAll(RegExp(r'[^0-9]'), '')}@hunarsangam.in'
+            : '');
+
+    // Step 1: Attempt Supabase Auth Sign Up
+    final c = client;
+    if (c != null && cleanEmail.isNotEmpty) {
+      try {
+        final safePassword = (password != null && password.length >= 6) ? password : 'HunarSangam@123';
+        final authRes = await c.auth.signUp(
+          email: cleanEmail,
+          password: safePassword,
+          data: {
+            'name': name.trim(),
+            'phone': cleanPhone,
+            'role': role,
+          },
+        );
+        if (authRes.user != null && authRes.user!.id.isNotEmpty) {
+          finalUserId = authRes.user!.id;
+          if (kDebugMode) {
+            print('[SupabaseService] Created Supabase Auth user: $finalUserId ($cleanEmail)');
+          }
+        }
+      } catch (authError) {
+        if (kDebugMode) {
+          print('[SupabaseService] Auth signup note: $authError');
+        }
+      }
+    }
+
+    // If finalUserId is still empty, check if profile exists with this email or phone
+    if (finalUserId.isEmpty) {
+      if (cleanEmail.isNotEmpty) {
+        final existingByEmail = await queryTable('profiles', filters: {'email': 'eq.$cleanEmail'}, limit: 1);
+        if (existingByEmail.isNotEmpty && existingByEmail.first['user_id'] != null) {
+          finalUserId = existingByEmail.first['user_id'].toString();
+        }
+      }
+      if (finalUserId.isEmpty && cleanPhone.isNotEmpty) {
+        final existingByPhone = await queryTable('profiles', filters: {'phone': 'eq.$cleanPhone'}, limit: 1);
+        if (existingByPhone.isNotEmpty && existingByPhone.first['user_id'] != null) {
+          finalUserId = existingByPhone.first['user_id'].toString();
+        }
+      }
+    }
+
+    // If still empty or not valid UUID format, generate a valid RFC4122 UUID v4
+    if (finalUserId.isEmpty || !UuidUtil.isValidUuid(finalUserId)) {
+      finalUserId = UuidUtil.generateV4();
+    }
+
+    // Step 2: Prepare and upsert profiles table
+    final profilePayload = <String, dynamic>{
+      'user_id': finalUserId,
+      'name': name.trim().isNotEmpty ? name.trim() : (role == 'buyer' ? 'Bulk Buyer' : 'Artisan'),
+      'phone': cleanPhone.isNotEmpty ? cleanPhone : null,
+      'email': cleanEmail.isNotEmpty ? cleanEmail : null,
+      'profile_image': profileImage ?? (role == 'buyer'
+          ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80'
+          : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80'),
+      'role': role,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    };
+
+    final profileRes = await upsertRecord('profiles', profilePayload, onConflict: 'user_id');
+    if (kDebugMode) {
+      print('[SupabaseService] Synced profile to Supabase: $profileRes');
+    }
+
+    // Step 3: If artisan, sync to 'artisans' table
+    Map<String, dynamic>? artisanRes;
+    if (role == 'artisan') {
+      final artisanPayload = <String, dynamic>{
+        'user_id': finalUserId,
+        'craft_type': artisanDetails?['craft_type'] ?? artisanDetails?['craftType'] ?? 'Bamboo & Cane Weaving',
+        'location': artisanDetails?['location'] ?? 'Barabanki, Uttar Pradesh',
+        'bio': artisanDetails?['bio'] ?? 'Craftsman specializing in authentic handmade craftsmanship.',
+        'verification_status': artisanDetails?['verification_status'] ?? 'verified',
+        'experience_years': artisanDetails?['experience_years'] ?? artisanDetails?['experienceYears'] ?? '10+ Years',
+        'gi_cluster': artisanDetails?['gi_cluster'] ?? artisanDetails?['giCluster'] ?? 'Assam Cane & Bamboo Crafts',
+        'gi_registration_number': artisanDetails?['gi_registration_number'] ?? artisanDetails?['giRegistrationNumber'] ?? 'GI-429',
+        'reliability_score': artisanDetails?['reliability_score'] ?? 98,
+        'monthly_capacity': artisanDetails?['monthly_capacity'] ?? 500,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      };
+
+      artisanRes = await upsertRecord('artisans', artisanPayload, onConflict: 'user_id');
+      if (kDebugMode) {
+        print('[SupabaseService] Synced artisan to Supabase: $artisanRes');
+      }
+    }
+
+    return {
+      'user_id': finalUserId,
+      'profile': profileRes,
+      'artisan': artisanRes,
+    };
+  }
 
   Future<List<Map<String, dynamic>>> getProfiles({String? role}) async {
     final filters = <String, String>{};
@@ -147,6 +344,11 @@ class SupabaseService {
 
   Future<Map<String, dynamic>?> getProfileById(String id) async {
     final res = await queryTable('profiles', filters: {'id': 'eq.$id'}, limit: 1);
+    return res.isNotEmpty ? res.first : null;
+  }
+
+  Future<Map<String, dynamic>?> getProfileByUserId(String userId) async {
+    final res = await queryTable('profiles', filters: {'user_id': 'eq.$userId'}, limit: 1);
     return res.isNotEmpty ? res.first : null;
   }
 
@@ -168,6 +370,11 @@ class SupabaseService {
 
   Future<Map<String, dynamic>?> getArtisanById(String id) async {
     final res = await queryTable('artisans', filters: {'id': 'eq.$id'}, limit: 1);
+    return res.isNotEmpty ? res.first : null;
+  }
+
+  Future<Map<String, dynamic>?> getArtisanByUserId(String userId) async {
+    final res = await queryTable('artisans', filters: {'user_id': 'eq.$userId'}, limit: 1);
     return res.isNotEmpty ? res.first : null;
   }
 

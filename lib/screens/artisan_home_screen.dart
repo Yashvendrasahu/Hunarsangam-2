@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../models/onboarding_state.dart';
 import '../models/notification_model.dart';
+import '../models/product_model.dart';
 import '../services/notification_service.dart';
 import '../services/auth_service.dart';
 import '../services/product_service.dart';
@@ -227,6 +228,86 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showVoiceAssistantModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.55,
+        decoration: const BoxDecoration(
+          color: Color(0xFFFFFDFB),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28.0)),
+        ),
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            Container(
+              width: 44.0,
+              height: 4.5,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE5D5CB),
+                borderRadius: BorderRadius.circular(3.0),
+              ),
+            ),
+            const SizedBox(height: 20.0),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF0E8),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE8D4C5), width: 2.0),
+              ),
+              child: const Icon(Icons.mic_rounded, size: 36, color: Color(0xFF8C3A16)),
+            ),
+            const SizedBox(height: 16.0),
+            const Text(
+              'Hunar Voice Assistant',
+              style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF2D2421),
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            const Text(
+              'Speak in your native language (Hindi, Assamese, Bengali, Tamil...) to create catalog, check orders or find collaborators.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13.0, color: Color(0xFF7A685F), height: 1.4),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('🎙️ Listening... Speak now'),
+                      backgroundColor: Color(0xFF8C3A16),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.mic, color: Colors.white),
+                label: const Text(
+                  'Tap to Speak Now',
+                  style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8C3A16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -603,34 +684,37 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
               const SizedBox(width: 10.0),
 
               // User Avatar with green dot
-              Stack(
-                children: [
-                  Container(
-                    width: 36.0,
-                    height: 36.0,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFFEADFD6),
-                      border: Border.all(color: const Color(0xFFD5C4B8), width: 1.5),
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.person, color: Color(0xFF7C3F24), size: 22.0),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 10.0,
-                      height: 10.0,
+              GestureDetector(
+                onTap: () => setState(() => _currentNavIndex = 4),
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 36.0,
+                      height: 36.0,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2E7D32),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
+                        color: const Color(0xFFEADFD6),
+                        border: Border.all(color: const Color(0xFFD5C4B8), width: 1.5),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.person, color: Color(0xFF7C3F24), size: 22.0),
                       ),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 10.0,
+                        height: 10.0,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2E7D32),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -674,106 +758,119 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
 
   // 3. AI Voice Search Bar
   Widget _buildVoiceSearchBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFBF8),
-        borderRadius: BorderRadius.circular(20.0),
-        border: Border.all(color: const Color(0xFFEADFD6)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF7C3F24).withValues(alpha: 0.04),
-            offset: const Offset(0, 3),
-            blurRadius: 8.0,
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-      child: Row(
-        children: [
-          const Icon(Icons.graphic_eq_rounded, color: Color(0xFFA84318), size: 22.0),
-          const SizedBox(width: 10.0),
-          const Expanded(
-            child: Text(
-              'Tap to speak or ask Hunar Assistant...',
-              style: TextStyle(
-                fontSize: 13.5,
-                color: Color(0xFF7A685F),
-                fontWeight: FontWeight.w500,
+    return GestureDetector(
+      onTap: _showVoiceAssistantModal,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBF8),
+          borderRadius: BorderRadius.circular(20.0),
+          border: Border.all(color: const Color(0xFFEADFD6)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF7C3F24).withValues(alpha: 0.04),
+              offset: const Offset(0, 3),
+              blurRadius: 8.0,
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
+        child: Row(
+          children: [
+            const Icon(Icons.graphic_eq_rounded, color: Color(0xFFA84318), size: 22.0),
+            const SizedBox(width: 10.0),
+            const Expanded(
+              child: Text(
+                'Tap to speak or ask Hunar Assistant...',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  color: Color(0xFF7A685F),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: const BoxDecoration(
-              color: Color(0xFF8C3A16),
-              shape: BoxShape.circle,
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: const BoxDecoration(
+                color: Color(0xFF8C3A16),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.mic_rounded, color: Colors.white, size: 18.0),
             ),
-            child: const Icon(Icons.mic_rounded, color: Colors.white, size: 18.0),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   // 4. Metrics Cards Row
   Widget _buildMetricsCardsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16.0),
-            onTap: () {
-              setState(() {
-                _activeSubScreen = OrderRequestScreen(
-                  onBack: () => setState(() => _activeSubScreen = null),
-                  onNavigateTab: (idx) => setState(() {
-                    _activeSubScreen = null;
-                    _currentNavIndex = idx;
-                  }),
-                  onAccept: () {
-                    setState(() => _activeSubScreen = null);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('✅ Order Accepted! Secured in Escrow.'),
-                        backgroundColor: Color(0xFF2E7D32),
-                      ),
+    return StreamBuilder<List<dynamic>>(
+      stream: OrderService().ordersStream,
+      builder: (context, snapshot) {
+        final orders = snapshot.data ?? [];
+        final inProgress = orders.where((o) => o.status == 'in_progress' || o.status == 'production').length;
+        final completed = orders.where((o) => o.status == 'delivered' || o.status == 'completed').length;
+        final pending = orders.where((o) => o.status == 'escrow_locked' || o.status == 'pending').length;
+
+        return Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16.0),
+                onTap: () {
+                  setState(() {
+                    _activeSubScreen = OrderRequestScreen(
+                      onBack: () => setState(() => _activeSubScreen = null),
+                      onNavigateTab: (idx) => setState(() {
+                        _activeSubScreen = null;
+                        _currentNavIndex = idx;
+                      }),
+                      onAccept: () {
+                        setState(() => _activeSubScreen = null);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('✅ Order Accepted! Secured in Escrow.'),
+                            backgroundColor: Color(0xFF2E7D32),
+                          ),
+                        );
+                      },
                     );
-                  },
-                );
-              });
-            },
-            child: _buildMetricCard(
-              title: 'New\nOrders',
-              count: '2',
-              hasBadgeDot: true,
+                  });
+                },
+                child: _buildMetricCard(
+                  title: 'New\nOrders',
+                  count: pending > 0 ? '$pending' : '2',
+                  hasBadgeDot: true,
+                ),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(width: 10.0),
-        Expanded(
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16.0),
-            onTap: () => setState(() => _currentNavIndex = 2),
-            child: _buildMetricCard(
-              title: 'In Progress',
-              count: '1',
-              hasBadgeDot: false,
+            const SizedBox(width: 10.0),
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16.0),
+                onTap: () => setState(() => _currentNavIndex = 2),
+                child: _buildMetricCard(
+                  title: 'In Progress',
+                  count: inProgress > 0 ? '$inProgress' : '1',
+                  hasBadgeDot: false,
+                ),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(width: 10.0),
-        Expanded(
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16.0),
-            onTap: () => setState(() => _currentNavIndex = 2),
-            child: _buildMetricCard(
-              title: 'Completed',
-              count: '28',
-              hasBadgeDot: false,
+            const SizedBox(width: 10.0),
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16.0),
+                onTap: () => setState(() => _currentNavIndex = 2),
+                child: _buildMetricCard(
+                  title: 'Completed',
+                  count: completed > 0 ? '$completed' : '28',
+                  hasBadgeDot: false,
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
@@ -1052,81 +1149,279 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
 
   // 6. My Products Section
   Widget _buildMyProductsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return StreamBuilder<List<ProductModel>>(
+      stream: ProductService().productsStream,
+      builder: (context, snapshot) {
+        final products = snapshot.data ?? [];
+        final count = products.length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
-                Text(
-                  'My Products',
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF221C19),
-                  ),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'My Products',
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF221C19),
+                      ),
+                    ),
+                    const SizedBox(width: 6.0),
+                    Text(
+                      '($count)',
+                      style: const TextStyle(
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF7A685F),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 6.0),
-                Text(
-                  '(6)',
-                  style: TextStyle(
-                    fontSize: 15.0,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF7A685F),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _productsFlowInitialStep = 1;
+                      _currentNavIndex = 1;
+                    });
+                  },
+                  icon: const Icon(Icons.add, size: 16.0, color: Color(0xFFA84318)),
+                  label: const Text(
+                    'Add Product',
+                    style: TextStyle(
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFFA84318),
+                    ),
                   ),
                 ),
               ],
             ),
-            TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  _productsFlowInitialStep = 1;
-                  _currentNavIndex = 1;
-                });
-              },
-              icon: const Icon(Icons.add, size: 16.0, color: Color(0xFFA84318)),
-              label: const Text(
-                'Add Product',
-                style: TextStyle(
-                  fontSize: 13.0,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFA84318),
+
+            const SizedBox(height: 8.0),
+
+            if (products.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(18.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFDFB),
+                  borderRadius: BorderRadius.circular(16.0),
+                  border: Border.all(color: const Color(0xFFEADFD6)),
+                ),
+                child: Center(
+                  child: Column(
+                    children: [
+                      const Icon(Icons.inventory_2_outlined, size: 36.0, color: Color(0xFFB85324)),
+                      const SizedBox(height: 8.0),
+                      const Text(
+                        'No products listed yet',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.0, color: Color(0xFF2D2421)),
+                      ),
+                      const SizedBox(height: 4.0),
+                      const Text(
+                        'Tap "Add Product" above or use the AI Voice Assistant to list your first craft.',
+                        style: TextStyle(fontSize: 12.0, color: Color(0xFF7A685F)),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: products.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12.0,
+                  mainAxisSpacing: 12.0,
+                  childAspectRatio: 0.76,
+                ),
+                itemBuilder: (context, index) {
+                  final p = products[index];
+                  return InkWell(
+                    onTap: () => _showProductOptionsModal(p),
+                    borderRadius: BorderRadius.circular(18.0),
+                    child: _buildProductCard(
+                      title: p.name,
+                      price: '₹${p.price.toInt()}',
+                      orders: '${p.stock} In Stock',
+                      moq: '10',
+                      imageUrl: p.primaryImageUrl,
+                      iconData: _getProductIcon(p.craftType),
+                    ),
+                  );
+                },
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  IconData _getProductIcon(String craftType) {
+    if (craftType.toLowerCase().contains('bamboo') || craftType.toLowerCase().contains('basket')) {
+      return Icons.shopping_basket_outlined;
+    } else if (craftType.toLowerCase().contains('pottery') || craftType.toLowerCase().contains('ceramic')) {
+      return Icons.soup_kitchen_outlined;
+    } else if (craftType.toLowerCase().contains('saree') || craftType.toLowerCase().contains('weave') || craftType.toLowerCase().contains('textile')) {
+      return Icons.dry_cleaning_outlined;
+    }
+    return Icons.yard_outlined;
+  }
+
+  void _showProductOptionsModal(ProductModel product) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFFFFFDFB),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+        ),
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40.0,
+                height: 4.0,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5D5CB),
+                  borderRadius: BorderRadius.circular(2.0),
                 ),
               ),
             ),
+            const SizedBox(height: 16.0),
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: const Color(0xFFFDECE8),
+                  child: Icon(_getProductIcon(product.craftType), color: const Color(0xFFA84318)),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16.0, color: Color(0xFF2D2421)),
+                      ),
+                      Text(
+                        '₹${product.price.toInt()} • Stock: ${product.stock} units',
+                        style: const TextStyle(fontSize: 12.5, color: Color(0xFF7A685F)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18.0),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined, color: Color(0xFF4A372D)),
+              title: const Text('Update Price & Stock', style: TextStyle(fontWeight: FontWeight.w700)),
+              onTap: () {
+                Navigator.pop(context);
+                _showEditProductPriceDialog(product);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.sync_alt_rounded, color: Color(0xFF2E7D32)),
+              title: const Text('Sync with ONDC National Network', style: TextStyle(fontWeight: FontWeight.w700)),
+              trailing: const Text('Active', style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.w800, fontSize: 12.0)),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('⚡ Product catalog synchronized with ONDC Network.'),
+                    backgroundColor: Color(0xFF2E7D32),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded, color: Color(0xFFC62828)),
+              title: const Text('Remove Product', style: TextStyle(color: Color(0xFFC62828), fontWeight: FontWeight.w700)),
+              onTap: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                Navigator.pop(context);
+                await ProductService().deleteProduct(product.id);
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text('🗑️ Removed "${product.name}" from catalog.'),
+                    backgroundColor: const Color(0xFF2D2421),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12.0),
           ],
         ),
+      ),
+    );
+  }
 
-        const SizedBox(height: 8.0),
+  void _showEditProductPriceDialog(ProductModel product) {
+    final priceCtrl = TextEditingController(text: product.price.toInt().toString());
+    final stockCtrl = TextEditingController(text: product.stock.toString());
 
-        Row(
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFFFFFDFB),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+        title: Text('Edit ${product.name}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17.0)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: _buildProductCard(
-                title: 'Woven Fruit Basket',
-                price: '₹340',
-                orders: '42 Orders',
-                moq: '25',
-                imageUrl: 'assets/fruit_basket.png',
-                iconData: Icons.shopping_basket_outlined,
-              ),
+            TextField(
+              controller: priceCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Price per piece (₹)', prefixText: '₹ '),
             ),
-            const SizedBox(width: 12.0),
-            Expanded(
-              child: _buildProductCard(
-                title: 'Cane Indoor Planter',
-                price: '₹520',
-                orders: '18 Orders',
-                moq: '15',
-                imageUrl: 'assets/indoor_planter.png',
-                iconData: Icons.yard_outlined,
-              ),
+            const SizedBox(height: 8.0),
+            TextField(
+              controller: stockCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Available Inventory Count'),
             ),
           ],
         ),
-      ],
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFA84318),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final newPrice = double.tryParse(priceCtrl.text) ?? product.price;
+              final newStock = int.tryParse(stockCtrl.text) ?? product.stock;
+              final messenger = ScaffoldMessenger.of(context);
+              final nav = Navigator.of(ctx);
+
+              await ProductService().updateProduct(
+                product.id,
+                price: newPrice,
+                stock: newStock,
+              );
+              nav.pop();
+              messenger.showSnackBar(
+                const SnackBar(content: Text('✅ Product details updated successfully!'), backgroundColor: Color(0xFF2E7D32)),
+              );
+            },
+            child: const Text('Save Changes'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1386,7 +1681,17 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
               ],
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                setState(() {
+                  _activeSubScreen = CollaborationHubScreen(
+                    onBack: () => setState(() => _activeSubScreen = null),
+                    onNavigateTab: (idx) => setState(() {
+                      _activeSubScreen = null;
+                      _currentNavIndex = idx;
+                    }),
+                  );
+                });
+              },
               child: const Text(
                 'View All (12)>',
                 style: TextStyle(
@@ -1609,7 +1914,17 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      setState(() {
+                        _activeSubScreen = CollaborationHubScreen(
+                          onBack: () => setState(() => _activeSubScreen = null),
+                          onNavigateTab: (idx) => setState(() {
+                            _activeSubScreen = null;
+                            _currentNavIndex = idx;
+                          }),
+                        );
+                      });
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF3E7DF),
                       foregroundColor: const Color(0xFF8C3A16),

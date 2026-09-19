@@ -37,6 +37,7 @@ import 'screens/buyer_profile_screen.dart';
 import 'screens/buyer_order_details_screen.dart';
 import 'screens/buyer_artisan_chat_screen.dart';
 import 'services/supabase_service.dart';
+import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -151,7 +152,8 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
     });
   }
 
-  void _completeOnboardingAndGoHome() {
+  void _completeOnboardingAndGoHome() async {
+    await AuthService().syncArtisanFullProfile(_state);
     setState(() {
       _isLoggedIn = true;
     });
@@ -183,6 +185,13 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
         currentLanguage: _state.selectedLanguage.isNotEmpty ? _state.selectedLanguage : 'English',
         onLoginSuccess: _performLogin,
         onLoginSuccessWithState: (loggedInState) => _performLogin(loggedInState),
+        onBuyerLoginSuccess: (buyerModel) {
+          setState(() {
+            _buyerModel = buyerModel;
+            _buyerStep = 5;
+            _showingLoginScreen = false;
+          });
+        },
         onCreateAccount: _goToAccountCreation,
         onBack: _goToAccountCreation,
       );
@@ -217,7 +226,18 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
         onBack: () => setState(() => _buyerStep = 2),
         onEditStep1: () => setState(() => _buyerStep = 1),
         onEditStep2: () => setState(() => _buyerStep = 2),
-        onCreateProfile: () => setState(() => _buyerStep = 4),
+        onCreateProfile: () async {
+          await AuthService().registerBuyer(
+            yourName: _buyerModel.yourName,
+            businessName: _buyerModel.businessName,
+            phone: _buyerModel.phoneNumber,
+            email: _buyerModel.workEmail,
+            password: 'BuyerPassword@123',
+            businessType: _buyerModel.businessType.title,
+            cityLocation: 'New Delhi',
+          );
+          setState(() => _buyerStep = 4);
+        },
       );
     }
 
@@ -286,6 +306,9 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
         onTabChange: (idx) {
           if (idx == 0) setState(() => _buyerStep = 5);
           if (idx == 1) setState(() => _buyerStep = 6);
+          if (idx == 2) setState(() => _buyerStep = 12);
+          if (idx == 3) setState(() => _buyerStep = 20);
+          if (idx == 4) setState(() => _buyerStep = 21);
         },
       );
     }
@@ -296,9 +319,13 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
         searchQuery: _buyerSearchQuery,
         onBack: () => setState(() => _buyerStep = 7),
         onViewArtisanProfile: () => setState(() => _buyerStep = 10),
+        onAddRequirement: () => setState(() => _buyerStep = 13),
         onTabChange: (idx) {
           if (idx == 0) setState(() => _buyerStep = 5);
           if (idx == 1) setState(() => _buyerStep = 6);
+          if (idx == 2) setState(() => _buyerStep = 12);
+          if (idx == 3) setState(() => _buyerStep = 20);
+          if (idx == 4) setState(() => _buyerStep = 21);
         },
       );
     }
@@ -311,6 +338,9 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
         onTabChange: (idx) {
           if (idx == 0) setState(() => _buyerStep = 5);
           if (idx == 1) setState(() => _buyerStep = 6);
+          if (idx == 2) setState(() => _buyerStep = 12);
+          if (idx == 3) setState(() => _buyerStep = 20);
+          if (idx == 4) setState(() => _buyerStep = 21);
         },
       );
     }
@@ -322,6 +352,9 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
         onTabChange: (idx) {
           if (idx == 0) setState(() => _buyerStep = 5);
           if (idx == 1) setState(() => _buyerStep = 6);
+          if (idx == 2) setState(() => _buyerStep = 12);
+          if (idx == 3) setState(() => _buyerStep = 20);
+          if (idx == 4) setState(() => _buyerStep = 21);
         },
       );
     }
@@ -334,6 +367,8 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
           if (idx == 0) setState(() => _buyerStep = 5);
           if (idx == 1) setState(() => _buyerStep = 6);
           if (idx == 2) setState(() => _buyerStep = 12);
+          if (idx == 3) setState(() => _buyerStep = 20);
+          if (idx == 4) setState(() => _buyerStep = 21);
         },
       );
     }

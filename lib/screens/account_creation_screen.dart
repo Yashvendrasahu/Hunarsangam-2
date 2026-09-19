@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/onboarding_state.dart';
 import '../widgets/onboarding_header.dart';
 import '../widgets/action_button.dart';
+import '../services/auth_service.dart';
 
 class AccountCreationScreen extends StatefulWidget {
   final OnboardingState state;
@@ -26,14 +27,24 @@ class AccountCreationScreen extends StatefulWidget {
 }
 
 class _AccountCreationScreenState extends State<AccountCreationScreen> {
+  late TextEditingController _nameController;
+  late TextEditingController _locationController;
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
   bool _obscurePassword = true;
+  String? _errorMessage;
+  bool _isRegistering = false;
 
   @override
   void initState() {
     super.initState();
+    _nameController = TextEditingController(
+      text: widget.state.artisanName != 'Ramu Kumar' ? widget.state.artisanName : '',
+    );
+    _locationController = TextEditingController(
+      text: widget.state.artisanLocation != 'Barabanki, Uttar Pradesh' ? widget.state.artisanLocation : '',
+    );
     _phoneController = TextEditingController(text: widget.state.phoneNumber);
     _emailController = TextEditingController(text: widget.state.email);
     _passwordController = TextEditingController(text: widget.state.password);
@@ -41,20 +52,61 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
+    _locationController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _updateStateAndContinue() {
-    widget.onStateChanged(
-      widget.state.copyWith(
-        phoneNumber: _phoneController.text,
-        email: _emailController.text,
-        password: _passwordController.text,
-      ),
+  Future<void> _updateStateAndContinue() async {
+    final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final email = _emailController.text.trim();
+    final location = _locationController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (name.isEmpty) {
+      setState(() => _errorMessage = 'Please enter your Full Name / कारीगर का नाम');
+      return;
+    }
+    if (phone.isEmpty && email.isEmpty) {
+      setState(() => _errorMessage = 'Please enter either a Phone number or Email address');
+      return;
+    }
+    if (password.length < 6) {
+      setState(() => _errorMessage = 'Password must be at least 6 characters');
+      return;
+    }
+
+    setState(() {
+      _errorMessage = null;
+      _isRegistering = true;
+    });
+
+    final updatedState = widget.state.copyWith(
+      artisanName: name,
+      artisanLocation: location.isNotEmpty ? location : 'Varanasi, Uttar Pradesh',
+      phoneNumber: phone,
+      email: email,
+      password: password,
     );
+
+    // Register in AuthService
+    try {
+      await AuthService().registerArtisan(
+        name: name,
+        phone: phone,
+        email: email,
+        password: password,
+        location: location.isNotEmpty ? location : 'Varanasi, Uttar Pradesh',
+      );
+    } catch (_) {}
+
+    widget.onStateChanged(updatedState);
+    if (!mounted) return;
+    setState(() => _isRegistering = false);
     widget.onContinue();
   }
 
@@ -68,7 +120,7 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
             OnboardingHeader(
               currentStep: 1,
               totalSteps: 5,
-              stepLabel: 'Artisan Setup',
+              stepLabel: 'Artisan Registration',
               onBack: widget.onBack,
               currentLanguage: widget.state.selectedLanguage,
             ),
@@ -76,7 +128,7 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -91,12 +143,12 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 12.0),
+                    const SizedBox(height: 10.0),
 
                     const Text(
                       'Create Your Account',
                       style: TextStyle(
-                        fontSize: 28.0,
+                        fontSize: 26.0,
                         fontWeight: FontWeight.w800,
                         color: Color(0xFF221C19),
                         letterSpacing: -0.5,
@@ -104,25 +156,129 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
                     ),
                     const SizedBox(height: 4.0),
                     const Text(
-                      'Enter your contact details to get started.',
+                      'Join HunarSangam to connect with bulk buyers and showcase your craft.',
                       style: TextStyle(
-                        fontSize: 14.5,
+                        fontSize: 14.0,
                         color: Color(0xFF6B584E),
                       ),
                     ),
 
-                    const SizedBox(height: 28.0),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 14.0),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFEBEE),
+                          borderRadius: BorderRadius.circular(12.0),
+                          border: Border.all(color: const Color(0xFFFFCDD2)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Color(0xFFC62828), size: 18.0),
+                            const SizedBox(width: 8.0),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: const TextStyle(fontSize: 12.5, color: Color(0xFFC62828), fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
 
-                    // Phone Number Input
+                    const SizedBox(height: 20.0),
+
+                    // Full Name Input
                     const Text(
-                      'Phone Number',
+                      'Full Name / पूरा नाम *',
                       style: TextStyle(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF2D2421),
                       ),
                     ),
-                    const SizedBox(height: 8.0),
+                    const SizedBox(height: 6.0),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF6ECE5),
+                        borderRadius: BorderRadius.circular(16.0),
+                        border: Border.all(color: const Color(0xFFE5D5CB)),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.person_outline_rounded, color: Color(0xFF6B584E), size: 20.0),
+                          const SizedBox(width: 12.0),
+                          Expanded(
+                            child: TextField(
+                              controller: _nameController,
+                              decoration: const InputDecoration(
+                                hintText: 'Enter your full name (e.g. Ramu Kumar / Ramesh)',
+                                hintStyle: TextStyle(
+                                  fontSize: 14.0,
+                                  color: Color(0xFF9E8D84),
+                                ),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16.0),
+
+                    // Location / City
+                    const Text(
+                      'Craft Location & State / स्थान व राज्य',
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2D2421),
+                      ),
+                    ),
+                    const SizedBox(height: 6.0),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF6ECE5),
+                        borderRadius: BorderRadius.circular(16.0),
+                        border: Border.all(color: const Color(0xFFE5D5CB)),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.location_on_outlined, color: Color(0xFF6B584E), size: 20.0),
+                          const SizedBox(width: 12.0),
+                          Expanded(
+                            child: TextField(
+                              controller: _locationController,
+                              decoration: const InputDecoration(
+                                hintText: 'e.g. Barabanki, UP / Varanasi / Jaipur',
+                                hintStyle: TextStyle(
+                                  fontSize: 14.0,
+                                  color: Color(0xFF9E8D84),
+                                ),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16.0),
+
+                    // Phone Number Input
+                    const Text(
+                      'Phone Number / मोबाइल नंबर',
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2D2421),
+                      ),
+                    ),
+                    const SizedBox(height: 6.0),
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFFF6ECE5),
@@ -153,7 +309,7 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
                               controller: _phoneController,
                               keyboardType: TextInputType.phone,
                               decoration: const InputDecoration(
-                                hintText: 'Enter your phone number',
+                                hintText: 'Enter 10-digit phone number',
                                 hintStyle: TextStyle(
                                   fontSize: 14.0,
                                   color: Color(0xFF9E8D84),
@@ -166,18 +322,18 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 20.0),
+                    const SizedBox(height: 16.0),
 
                     // Email Address Input
                     const Text(
-                      'Email Address',
+                      'Email Address / ईमेल (Optional)',
                       style: TextStyle(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF2D2421),
                       ),
                     ),
-                    const SizedBox(height: 8.0),
+                    const SizedBox(height: 6.0),
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFFF6ECE5),
@@ -194,7 +350,7 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
                               decoration: const InputDecoration(
-                                hintText: 'Enter your email address',
+                                hintText: 'you@hunarsangam.in',
                                 hintStyle: TextStyle(
                                   fontSize: 14.0,
                                   color: Color(0xFF9E8D84),
@@ -207,18 +363,18 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 20.0),
+                    const SizedBox(height: 16.0),
 
                     // Password Input
                     const Text(
-                      'Create Password',
+                      'Create Password / पासवर्ड बनाएं *',
                       style: TextStyle(
                         fontSize: 14.0,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF2D2421),
                       ),
                     ),
-                    const SizedBox(height: 8.0),
+                    const SizedBox(height: 6.0),
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFFF6ECE5),
@@ -235,7 +391,7 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
                               controller: _passwordController,
                               obscureText: _obscurePassword,
                               decoration: const InputDecoration(
-                                hintText: 'Enter a password',
+                                hintText: 'Create a password (min 6 characters)',
                                 hintStyle: TextStyle(
                                   fontSize: 14.0,
                                   color: Color(0xFF9E8D84),
@@ -259,59 +415,58 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 6.0),
-                    const Text(
-                      'Use at least 8 characters',
-                      style: TextStyle(
-                        fontSize: 12.0,
-                        color: Color(0xFF7A685F),
+
+                    const SizedBox(height: 24.0),
+
+                    // Already have an account? Sign in link
+                    Center(
+                      child: InkWell(
+                        onTap: widget.onAlreadyHaveAccount,
+                        borderRadius: BorderRadius.circular(12.0),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                          child: RichText(
+                            text: const TextSpan(
+                              text: 'Already have an account? ',
+                              style: TextStyle(
+                                fontSize: 14.0,
+                                color: Color(0xFF6B584E),
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: 'Sign In / लॉगिन करें',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFFB85324),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
+
+                    const SizedBox(height: 20.0),
                   ],
                 ),
               ),
             ),
 
-            // Bottom Continue Button & Already have account option
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ActionButton(
-                    text: 'Continue',
-                    backgroundColor: const Color(0xFFE66B38),
-                    onPressed: _updateStateAndContinue,
-                  ),
-                  if (widget.onAlreadyHaveAccount != null) ...[
-                    const SizedBox(height: 12.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Already have an account? ',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            color: Color(0xFF6B584E),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: widget.onAlreadyHaveAccount,
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              color: Color(0xFFE66B38),
-                              fontWeight: FontWeight.w800,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
+            // Bottom Continue Action Button
+            Container(
+              padding: const EdgeInsets.all(20.0),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFDFBF9),
+                border: Border(
+                  top: BorderSide(color: Color(0xFFF3E7DF)),
+                ),
+              ),
+              child: ActionButton(
+                text: _isRegistering ? 'Registering...' : 'Continue / आगे बढ़ें',
+                icon: Icons.arrow_forward_rounded,
+                onPressed: _isRegistering ? () {} : _updateStateAndContinue,
               ),
             ),
           ],

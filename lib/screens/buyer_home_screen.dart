@@ -180,7 +180,9 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
         ),
         // User Profile Avatar
         GestureDetector(
-          onTap: () => _showNotificationSnackBar('Bulk Buyer Account: $_companyName'),
+          onTap: () {
+            widget.onTabChange?.call(4);
+          },
           child: Container(
             margin: const EdgeInsets.only(right: 16.0, left: 4.0),
             width: 34,
@@ -401,7 +403,13 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
             width: double.infinity,
             height: 46,
             child: ElevatedButton(
-              onPressed: () => _showPostRequirementDialog(),
+              onPressed: () {
+                if (widget.onPostRequirement != null) {
+                  widget.onPostRequirement!();
+                } else {
+                  _showPostRequirementDialog();
+                }
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: _primaryRust,
@@ -439,8 +447,11 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
         Expanded(
           child: InkWell(
             onTap: () {
-              setState(() => _currentBottomNavIndex = 1);
-              _showNotificationSnackBar('Navigating to Discover catalog');
+              if (widget.onOpenDiscover != null) {
+                widget.onOpenDiscover!();
+              } else {
+                widget.onTabChange?.call(1);
+              }
             },
             borderRadius: BorderRadius.circular(18.0),
             child: Container(
@@ -496,8 +507,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
         Expanded(
           child: InkWell(
             onTap: () {
-              setState(() => _currentBottomNavIndex = 2);
-              _showNotificationSnackBar('Managing active bulk requirements');
+              widget.onTabChange?.call(2);
             },
             borderRadius: BorderRadius.circular(18.0),
             child: Container(
@@ -596,7 +606,9 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
               ],
             ),
             GestureDetector(
-              onTap: () => _showNotificationSnackBar('Viewing all 1 active bulk RFQs'),
+              onTap: () {
+                widget.onTabChange?.call(2);
+              },
               child: const Text(
                 'View All ›',
                 style: TextStyle(
@@ -711,7 +723,9 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                 width: double.infinity,
                 height: 42,
                 child: ElevatedButton(
-                  onPressed: () => _showNotificationSnackBar('Opening details for 500 Bamboo Baskets requirement'),
+                  onPressed: () {
+                    widget.onTabChange?.call(2);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _primaryRust,
                     foregroundColor: Colors.white,
@@ -757,7 +771,13 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => _showNotificationSnackBar('Browsing complete 850+ wholesale product catalog'),
+              onTap: () {
+                if (widget.onOpenDiscover != null) {
+                  widget.onOpenDiscover!();
+                } else {
+                  widget.onTabChange?.call(1);
+                }
+              },
               child: const Text(
                 'Browse Catalog ›',
                 style: TextStyle(
@@ -930,7 +950,13 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                       ),
                     ),
                     InkWell(
-                      onTap: () => _showNotificationSnackBar('Viewing specs for $title'),
+                      onTap: () {
+                        if (widget.onOpenDiscover != null) {
+                          widget.onOpenDiscover!();
+                        } else {
+                          widget.onTabChange?.call(1);
+                        }
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                         decoration: BoxDecoration(
@@ -974,7 +1000,13 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => _showNotificationSnackBar('Browsing all 140+ verified craft guild clusters'),
+              onTap: () {
+                if (widget.onOpenDiscover != null) {
+                  widget.onOpenDiscover!();
+                } else {
+                  widget.onTabChange?.call(1);
+                }
+              },
               child: const Text(
                 'All Artisans ›',
                 style: TextStyle(
@@ -1150,7 +1182,13 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
             width: double.infinity,
             height: 38,
             child: TextButton(
-              onPressed: () => _showNotificationSnackBar('Connecting with master artisan $name'),
+              onPressed: () {
+                if (widget.onOpenDiscover != null) {
+                  widget.onOpenDiscover!();
+                } else {
+                  widget.onTabChange?.call(1);
+                }
+              },
               style: TextButton.styleFrom(
                 backgroundColor: const Color(0xFFF0E5DC),
                 shape: RoundedRectangleBorder(
