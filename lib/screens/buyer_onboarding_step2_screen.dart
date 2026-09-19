@@ -236,7 +236,7 @@ class _BuyerOnboardingStep2ScreenState
         ),
         SizedBox(height: 4.0),
         Text(
-          'Choose the craft categories and order volumes you want to source directly from certified artisan clusters.',
+          'Choose the craft categories and order volumes you want to source directly from certified craft maker clusters.',
           style: TextStyle(
             color: _textMuted,
             fontSize: 12,

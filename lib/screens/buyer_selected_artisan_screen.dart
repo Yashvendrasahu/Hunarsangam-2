@@ -95,7 +95,7 @@ class _BuyerSelectedArtisanScreenState extends State<BuyerSelectedArtisanScreen>
           ),
           const Expanded(
             child: Text(
-              'Selected Artisan',
+              'Selected Craft Maker',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
@@ -105,11 +105,11 @@ class _BuyerSelectedArtisanScreenState extends State<BuyerSelectedArtisanScreen>
           ),
           IconButton(
             icon: const Icon(Icons.share_outlined, color: _textDark, size: 20),
-            onPressed: () => _showNotification('Shared artisan profile'),
+            onPressed: () => _showNotification('Shared craft maker profile'),
           ),
           IconButton(
             icon: const Icon(Icons.bookmark_border, color: _textDark, size: 20),
-            onPressed: () => _showNotification('Saved to shortlisted artisans'),
+            onPressed: () => _showNotification('Saved to shortlisted craft makers'),
           ),
         ],
       ),
@@ -727,7 +727,7 @@ class _BuyerSelectedArtisanScreenState extends State<BuyerSelectedArtisanScreen>
                 const SizedBox(height: 8),
 
                 // Bar 2: Fair Wages
-                _buildCostRow('Fair Artisan Wages (Split & Weave)', '₹205 (57%)', 0.57, _primaryRust),
+                _buildCostRow('Fair Craft Maker Wages (Split & Weave)', '₹205 (57%)', 0.57, _primaryRust),
                 const SizedBox(height: 8),
 
                 // Bar 3: Smoke Cure & Packaging
@@ -830,7 +830,7 @@ class _BuyerSelectedArtisanScreenState extends State<BuyerSelectedArtisanScreen>
           OutlinedButton.icon(
             onPressed: widget.onMessageArtisan,
             icon: const Icon(Icons.chat_bubble_outline, size: 14),
-            label: const Text('Message\nArtisan', textAlign: TextAlign.center, style: TextStyle(fontSize: 10, height: 1.1)),
+            label: const Text('Message\nCraft Maker', textAlign: TextAlign.center, style: TextStyle(fontSize: 10, height: 1.1)),
             style: OutlinedButton.styleFrom(
               foregroundColor: _textDark,
               side: const BorderSide(color: Color(0xFFDFC8BA)),
@@ -853,7 +853,7 @@ class _BuyerSelectedArtisanScreenState extends State<BuyerSelectedArtisanScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
                   Text(
-                    'Select Artisan & Review Order',
+                    'Select Craft Maker & Review Order',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
                   ),
                   SizedBox(width: 4),

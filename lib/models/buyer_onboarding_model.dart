@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 enum BusinessType {
   retailer('Retailer', 'Stores & Boutiques'),
   eventOrganizer('Event Organizer', 'Weddings & Gifting'),
-  corporateBuyer('Corporate Buyer', 'Gifting & Decor'),
+  corporateBuyer('Corporate Bulk Buyer', 'Gifting & Decor'),
   shopOwner('Shop Owner', 'Local Outlets'),
   institutional('Institutional', 'Hotels & Exports'),
   other('Other', 'Custom Inquiries');

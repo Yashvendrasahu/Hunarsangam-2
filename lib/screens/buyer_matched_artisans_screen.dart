@@ -106,7 +106,7 @@ class _BuyerMatchedArtisansScreenState extends State<BuyerMatchedArtisansScreen>
           ),
           const Expanded(
             child: Text(
-              'Matched Artisans',
+              'Matched Craft Makers',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
@@ -348,7 +348,7 @@ class _BuyerMatchedArtisansScreenState extends State<BuyerMatchedArtisansScreen>
       name: 'Sunita Devi',
       roleBadge: 'Cooperative Lead',
       roleBadgeBg: const Color(0xFFA7F3D0),
-      location: 'Barpeta Women SHG • 42 Artisan Weavers',
+      location: 'Barpeta Women SHG • 42 Craft Maker Weavers',
       priceText: '₹340 – ₹380',
       monthlyCapacity: '400 pcs/mo',
       experience: '18 – 22 Days',
@@ -673,7 +673,7 @@ class _BuyerMatchedArtisansScreenState extends State<BuyerMatchedArtisansScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
                       Text(
-                        'View\nArtisan',
+                        'View\nCraft Maker',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, height: 1.1),
                       ),
@@ -726,13 +726,13 @@ class _BuyerMatchedArtisansScreenState extends State<BuyerMatchedArtisansScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${_selectedForCompare.length} Artisans selected for side-by-side comparison',
+                  '${_selectedForCompare.length} Craft Makers selected for side-by-side comparison',
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: _textDark),
                 ),
                 Text(
                   _selectedForCompare.contains('ramesh') && _selectedForCompare.contains('biren')
                       ? 'Ramesh Kumar & Biren Das'
-                      : 'Selected artisan clusters',
+                      : 'Selected craft maker clusters',
                   style: const TextStyle(fontSize: 10, color: _textMuted),
                 ),
               ],
@@ -742,7 +742,7 @@ class _BuyerMatchedArtisansScreenState extends State<BuyerMatchedArtisansScreen>
             onPressed: widget.onCompare,
             icon: const Icon(Icons.compare_arrows, size: 14),
             label: Text(
-              'Compare\nArtisans (${_selectedForCompare.length})',
+              'Compare\nCraft Makers (${_selectedForCompare.length})',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, height: 1.1),
             ),

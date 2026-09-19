@@ -189,7 +189,7 @@ class _BuyerRequirementReviewScreenState extends State<BuyerRequirementReviewScr
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  'Specify your sourcing needs to connect directly with verified master artisan clusters.',
+                  'Specify your sourcing needs to connect directly with verified master craft maker clusters.',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF4A382D),
@@ -452,7 +452,7 @@ class _BuyerRequirementReviewScreenState extends State<BuyerRequirementReviewScr
           const Divider(height: 1, color: Color(0xFFF5ECE5)),
           const SizedBox(height: 6),
           const Text(
-            'Active Artisan Cooperatives: 14 Master Guilds Available',
+            'Active Craft Maker Cooperatives: 14 Master Guilds Available',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,

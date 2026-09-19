@@ -99,7 +99,7 @@ class _BuyerOrdersHubScreenState extends State<BuyerOrdersHubScreen> {
                           ),
                           const SizedBox(height: 2),
                           const Text(
-                            'Track the orders you\'ve placed with artisans',
+                            'Track the orders you\'ve placed with craft makers',
                             style: TextStyle(
                               color: textMuted,
                               fontSize: 12,
@@ -207,14 +207,14 @@ class _BuyerOrdersHubScreenState extends State<BuyerOrdersHubScreen> {
                   datePlaced: '18 Sep 2026',
                   quantity: '200 pieces',
                   requiredDate: '15 Nov 2026',
-                  statusBadge: '⏳ Awaiting Artisan',
+                  statusBadge: '⏳ Awaiting Craft Maker',
                   statusBg: const Color(0xFFFEF3C7),
                   statusText: const Color(0xFF92400E),
                   title: 'Hexagonal Bamboo Planters',
                   artisan: 'Sunita Devi • Barpeta Women SHG',
                   orderValue: '₹76,000',
                   imageUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=300&q=80',
-                  footerNote: 'Artisan has 18 hrs left to review',
+                  footerNote: 'Craft Maker has 18 hrs left to review',
                   singleButtonAction: true,
                   primaryActionText: 'View Status / Details',
                   onPrimaryAction: () => widget.onViewOrderDetails?.call('HS-ORD-8819'),
@@ -231,7 +231,7 @@ class _BuyerOrdersHubScreenState extends State<BuyerOrdersHubScreen> {
                   title: 'Clay Terracotta Kulhads',
                   artisan: 'Kishan Prajapati • Kutch Guild',
                   originalValue: '₹45,000',
-                  counterOfferText: 'Artisan offered: 900 pcs @ ₹48',
+                  counterOfferText: 'Craft Maker offered: 900 pcs @ ₹48',
                   note: 'Kiln capacity limits initial batch to 900 units before festival cutoff.',
                   imageUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=300&q=80',
                   onReview: () => widget.onViewOrderDetails?.call('HS-ORD-8740'),
@@ -302,7 +302,7 @@ class _BuyerOrdersHubScreenState extends State<BuyerOrdersHubScreen> {
                                 SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    '100% Buyer Guarantee on Defective Batches',
+                                    '100% Bulk Buyer Guarantee on Defective Batches',
                                     style: TextStyle(
                                       color: Color(0xFF065F46),
                                       fontWeight: FontWeight.w800,
@@ -579,7 +579,7 @@ class _BuyerOrdersHubScreenState extends State<BuyerOrdersHubScreen> {
                   child: OutlinedButton.icon(
                     onPressed: onSecondaryAction ?? () {},
                     icon: const Icon(Icons.chat_bubble_outline, size: 14),
-                    label: const Text('Message Artisan', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    label: const Text('Message Craft Maker', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF1F1612),
                       side: const BorderSide(color: Color(0xFFDCC8BB)),

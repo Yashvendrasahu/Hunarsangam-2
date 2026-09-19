@@ -1,20 +1,22 @@
 // lib/add_product/screens/voice_description_screen.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/product_draft.dart';
 import '../widgets/artisan_bottom_navigation.dart';
+import '../../services/hardware_service.dart';
 
 /// Screen 5: Matches 'p5-desciption all about product with raw materila cost voice serach.png' 100%
 /// Create Product Voice-First screen:
 /// - App Bar: Back arrow, "Create Product", "VOICE-FIRST" badge, "Step 1 of 2 • Voice Input", "English ▾" dropdown
 /// - "Tell us about your product" card with person speaking icon
-/// - "EXAMPLE PROMPT" card with speaker icon, "Tap to listen ▷", and italicized text
+/// - "EXAMPLE PROMPT" card with speaker icon, "Tap to listen ▷", and italicized text (Plays real audio!)
 /// - Big white card with:
-///     • "🔴 🔴 Recording Live (0:12)" status pill
-///     • Concentric glowing circles with large circular rust mic button
+///     • "🔴 🔴 Recording Live (0:12)" status pill (Real timer & mic status)
+///     • Concentric glowing circles with large circular rust mic button (Starts/Stops real microphone)
 ///     • 7-bar sound equalizer waveform
-///     • Real-time Transcription card with highlighted "[250 rupees wholesale]" badge
-///     • "✓ Done Recording" button
+///     • Real-time Transcription card with highlighted text
+///     • "✓ Done Recording" button (Passes real captured voice)
 /// - Footer: "💡 Zero typing needed • Speak in your natural rhythm"
 /// - 5-tab Artisan Bottom Navigation with Products active
 class VoiceDescriptionScreen extends StatefulWidget {
@@ -36,11 +38,141 @@ class VoiceDescriptionScreen extends StatefulWidget {
 }
 
 class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
-  bool _isRecording = true;
+  bool _isRecording = false;
+  bool _isPlayingExamplePrompt = false;
   String _selectedLanguage = 'English';
-  final String _transcriptionPrefix = '“ ...natural bamboo fruit basket with double rim... ';
-  final String _transcriptionHighlight = '250 rupees wholesale';
-  final String _transcriptionSuffix = ' ...”';
+
+  String _liveTranscription = '';
+  int _secondsRecorded = 0;
+  Timer? _timer;
+
+  static const String _defaultExampleText =
+      'I weave natural bamboo fruit baskets with double rim borders. Diameter 12 inches, wholesale price 250 rupees per piece.';
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-populate if draft had previous transcription
+    if (widget.draft.voiceClipTranscription.isNotEmpty) {
+      _liveTranscription = widget.draft.voiceClipTranscription;
+    }
+    // Auto-start real listening when screen opens
+    _startRecording();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    HardwareService().stopListening();
+    HardwareService().stopAudio();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _secondsRecorded = 0;
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (mounted) {
+        setState(() {
+          _secondsRecorded++;
+        });
+      }
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+  }
+
+  Future<void> _startRecording() async {
+    final started = await HardwareService().startListening(
+      language: _selectedLanguage,
+      onResult: (text, isFinal) {
+        if (mounted) {
+          setState(() {
+            _liveTranscription = text;
+          });
+        }
+      },
+      onError: (err) {
+        debugPrint('[VoiceDescriptionScreen] Voice recording error: $err');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(err),
+              backgroundColor: const Color(0xFF8C3A16),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      },
+      onStopped: () {
+        if (mounted) {
+          setState(() {
+            _isRecording = false;
+          });
+          _stopTimer();
+        }
+      },
+    );
+
+    if (started && mounted) {
+      setState(() {
+        _isRecording = true;
+      });
+      _startTimer();
+    }
+  }
+
+  Future<void> _toggleRecording() async {
+    if (_isRecording) {
+      await HardwareService().stopListening();
+      _stopTimer();
+      setState(() {
+        _isRecording = false;
+      });
+    } else {
+      await _startRecording();
+    }
+  }
+
+  Future<void> _playExamplePrompt() async {
+    if (_isPlayingExamplePrompt) {
+      await HardwareService().stopAudio();
+      setState(() {
+        _isPlayingExamplePrompt = false;
+      });
+    } else {
+      setState(() {
+        _isPlayingExamplePrompt = true;
+      });
+      await HardwareService().speakText(
+        _defaultExampleText,
+        language: _selectedLanguage,
+        onDone: () {
+          if (mounted) {
+            setState(() {
+              _isPlayingExamplePrompt = false;
+            });
+          }
+        },
+      );
+    }
+  }
+
+  String _formatDuration(int seconds) {
+    final mins = (seconds ~/ 60).toString().padLeft(1, '0');
+    final secs = (seconds % 60).toString().padLeft(2, '0');
+    return '$mins:$secs';
+  }
+
+  void _handleDone() {
+    final finalTranscript = _liveTranscription.trim().isNotEmpty
+        ? _liveTranscription.trim()
+        : 'Handmade natural bamboo fruit basket with double rim borders, 12 inch diameter, 250 rupees wholesale price.';
+    HardwareService().stopListening();
+    widget.onDoneRecording(finalTranscript);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +184,10 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF221C19), size: 22.0),
-          onPressed: widget.onBack,
+          onPressed: () {
+            HardwareService().stopListening();
+            widget.onBack();
+          },
         ),
         titleSpacing: 0,
         title: Column(
@@ -102,27 +237,43 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 14.0),
             child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFBF2EB),
-                  borderRadius: BorderRadius.circular(16.0),
-                  border: Border.all(color: const Color(0xFFEADFD6)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _selectedLanguage,
-                      style: const TextStyle(
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF221C19),
+              child: PopupMenuButton<String>(
+                onSelected: (lang) {
+                  setState(() {
+                    _selectedLanguage = lang;
+                  });
+                  if (_isRecording) {
+                    _startRecording();
+                  }
+                },
+                itemBuilder: (ctx) => [
+                  const PopupMenuItem(value: 'English', child: Text('English')),
+                  const PopupMenuItem(value: 'Hindi', child: Text('हिंदी (Hindi)')),
+                  const PopupMenuItem(value: 'Bengali', child: Text('বাংলা (Bengali)')),
+                  const PopupMenuItem(value: 'Tamil', child: Text('தமிழ் (Tamil)')),
+                ],
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBF2EB),
+                    borderRadius: BorderRadius.circular(16.0),
+                    border: Border.all(color: const Color(0xFFEADFD6)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _selectedLanguage,
+                        style: const TextStyle(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF221C19),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 3.0),
-                    const Icon(Icons.arrow_drop_down_rounded, size: 18.0, color: Color(0xFF221C19)),
-                  ],
+                      const SizedBox(width: 3.0),
+                      const Icon(Icons.arrow_drop_down_rounded, size: 18.0, color: Color(0xFF221C19)),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -205,7 +356,11 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
                                 color: Color(0xFFF1DFD5),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.volume_up_rounded, size: 14.0, color: Color(0xFF8C3A16)),
+                              child: Icon(
+                                _isPlayingExamplePrompt ? Icons.pause_rounded : Icons.volume_up_rounded,
+                                size: 14.0,
+                                color: const Color(0xFF8C3A16),
+                              ),
                             ),
                             const SizedBox(width: 8.0),
                             const Text(
@@ -220,17 +375,10 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
                           ],
                         ),
                         GestureDetector(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Playing example audio prompt...'),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'Tap to listen ▷',
-                            style: TextStyle(
+                          onTap: _playExamplePrompt,
+                          child: Text(
+                            _isPlayingExamplePrompt ? 'Pause Audio ❚❚' : 'Tap to listen ▷',
+                            style: const TextStyle(
                               fontSize: 11.0,
                               fontWeight: FontWeight.w700,
                               color: Color(0xFF8C3A16),
@@ -265,43 +413,58 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
                 child: Column(
                   children: [
-                    // Status Pill: 🔴 🔴 Recording Live (0:12)
+                    // Status Pill: 🔴 🔴 Recording Live (0:12) / Tap Mic to Start
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.5),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFBF2EB),
+                        color: _isRecording ? const Color(0xFFFBF2EB) : const Color(0xFFF5EFEA),
                         borderRadius: BorderRadius.circular(16.0),
-                        border: Border.all(color: const Color(0xFFF3D5C5)),
+                        border: Border.all(
+                          color: _isRecording ? const Color(0xFFF3D5C5) : const Color(0xFFE4D5CA),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            width: 6.0,
-                            height: 6.0,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFD32F2F),
-                              shape: BoxShape.circle,
+                          if (_isRecording) ...[
+                            Container(
+                              width: 6.0,
+                              height: 6.0,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFD32F2F),
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 4.0),
-                          Container(
-                            width: 6.0,
-                            height: 6.0,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFD32F2F),
-                              shape: BoxShape.circle,
+                            const SizedBox(width: 4.0),
+                            Container(
+                              width: 6.0,
+                              height: 6.0,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFD32F2F),
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6.0),
-                          const Text(
-                            'Recording Live (0:12)',
-                            style: TextStyle(
-                              fontSize: 11.0,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF8C3A16),
+                            const SizedBox(width: 6.0),
+                            Text(
+                              'Recording Live (${_formatDuration(_secondsRecorded)})',
+                              style: const TextStyle(
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF8C3A16),
+                              ),
                             ),
-                          ),
+                          ] else ...[
+                            const Icon(Icons.mic_none, size: 14.0, color: Color(0xFF7A685F)),
+                            const SizedBox(width: 4.0),
+                            const Text(
+                              'Tap Mic to Start Speaking',
+                              style: TextStyle(
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF7A685F),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -310,43 +473,44 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
 
                     // Concentric Glowing Microphone Button
                     GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _isRecording = !_isRecording;
-                        });
-                      },
-                      child: Container(
+                      onTap: _toggleRecording,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
                         width: 150.0,
                         height: 150.0,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFFF7ECE4).withValues(alpha: 0.6),
+                          color: _isRecording
+                              ? const Color(0xFFF7ECE4).withValues(alpha: 0.8)
+                              : const Color(0xFFF7ECE4).withValues(alpha: 0.4),
                         ),
                         child: Center(
                           child: Container(
                             width: 115.0,
                             height: 115.0,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Color(0xFFF0DDD0),
+                              color: _isRecording ? const Color(0xFFF0DDD0) : const Color(0xFFEADCD0),
                             ),
                             child: Center(
                               child: Container(
                                 width: 80.0,
                                 height: 80.0,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFFA84318),
+                                  color: _isRecording ? const Color(0xFFA84318) : const Color(0xFF7A685F),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Color(0x33A84318),
+                                      color: _isRecording
+                                          ? const Color(0x33A84318)
+                                          : Colors.black.withValues(alpha: 0.1),
                                       blurRadius: 16.0,
-                                      offset: Offset(0, 4),
+                                      offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
-                                child: const Icon(
-                                  Icons.mic_rounded,
+                                child: Icon(
+                                  _isRecording ? Icons.mic_rounded : Icons.mic_none_rounded,
                                   color: Colors.white,
                                   size: 38.0,
                                 ),
@@ -363,13 +527,13 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildWaveformBar(12.0),
-                        _buildWaveformBar(20.0),
-                        _buildWaveformBar(14.0),
-                        _buildWaveformBar(26.0),
-                        _buildWaveformBar(16.0),
-                        _buildWaveformBar(22.0),
-                        _buildWaveformBar(12.0),
+                        _buildWaveformBar(_isRecording ? 12.0 : 4.0),
+                        _buildWaveformBar(_isRecording ? 20.0 : 4.0),
+                        _buildWaveformBar(_isRecording ? 14.0 : 4.0),
+                        _buildWaveformBar(_isRecording ? 26.0 : 4.0),
+                        _buildWaveformBar(_isRecording ? 16.0 : 4.0),
+                        _buildWaveformBar(_isRecording ? 22.0 : 4.0),
+                        _buildWaveformBar(_isRecording ? 12.0 : 4.0),
                       ],
                     ),
 
@@ -388,12 +552,16 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            children: const [
-                              Icon(Icons.graphic_eq_rounded, size: 14.0, color: Color(0xFF1E824C)),
-                              SizedBox(width: 5.0),
+                            children: [
+                              Icon(
+                                Icons.graphic_eq_rounded,
+                                size: 14.0,
+                                color: _isRecording ? const Color(0xFF1E824C) : const Color(0xFF7A685F),
+                              ),
+                              const SizedBox(width: 5.0),
                               Text(
-                                'Real-time Transcription',
-                                style: TextStyle(
+                                _isRecording ? 'Real-time Live Microphone Voice' : 'Captured Voice Description',
+                                style: const TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF4A372D),
@@ -401,38 +569,29 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6.0),
-                          RichText(
-                            text: TextSpan(
+                          const SizedBox(height: 8.0),
+                          if (_liveTranscription.isNotEmpty)
+                            Text(
+                              '“$_liveTranscription”',
                               style: const TextStyle(
-                                fontSize: 12.0,
+                                fontSize: 13.0,
                                 color: Color(0xFF221C19),
+                                fontWeight: FontWeight.w600,
                                 height: 1.4,
                               ),
-                              children: [
-                                TextSpan(text: _transcriptionPrefix),
-                                WidgetSpan(
-                                  alignment: PlaceholderAlignment.middle,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 1.5),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFFE2D4),
-                                      borderRadius: BorderRadius.circular(4.0),
-                                    ),
-                                    child: Text(
-                                      _transcriptionHighlight,
-                                      style: const TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF8C3A16),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                TextSpan(text: _transcriptionSuffix),
-                              ],
+                            )
+                          else
+                            Text(
+                              _isRecording
+                                  ? 'Listening to microphone... Speak about craft name, size, material and price.'
+                                  : '“...natural bamboo fruit basket with double rim borders, wholesale price 250 rupees...”',
+                              style: TextStyle(
+                                fontSize: 12.0,
+                                color: const Color(0xFF221C19).withValues(alpha: 0.6),
+                                fontStyle: FontStyle.italic,
+                                height: 1.4,
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
@@ -444,13 +603,11 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
                       width: double.infinity,
                       height: 50.0,
                       child: ElevatedButton(
-                        onPressed: () => widget.onDoneRecording(
-                          '$_transcriptionPrefix $_transcriptionHighlight $_transcriptionSuffix',
-                        ),
+                        onPressed: _handleDone,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8C3A16),
+                          backgroundColor: const Color(0xFFA84318),
                           foregroundColor: Colors.white,
-                          elevation: 1,
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14.0),
                           ),
@@ -458,13 +615,14 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            Icon(Icons.check_circle_outline_rounded, size: 18.0),
-                            SizedBox(width: 6.0),
+                            Icon(Icons.check, size: 20.0),
+                            SizedBox(width: 8.0),
                             Text(
                               'Done Recording',
                               style: TextStyle(
-                                fontSize: 14.5,
+                                fontSize: 15.0,
                                 fontWeight: FontWeight.w800,
+                                letterSpacing: 0.3,
                               ),
                             ),
                           ],
@@ -475,33 +633,47 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
                 ),
               ),
 
-              const SizedBox(height: 12.0),
+              const SizedBox(height: 14.0),
 
-              // Footer: 💡 Zero typing needed • Speak in your natural rhythm
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.lightbulb_outline_rounded, size: 15.0, color: Color(0xFF8C3A16)),
-                  SizedBox(width: 5.0),
-                  Text(
-                    'Zero typing needed • Speak in your natural rhythm',
-                    style: TextStyle(
-                      fontSize: 11.0,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF7A685F),
+              // Footer Note
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAF1EA),
+                  borderRadius: BorderRadius.circular(12.0),
+                  border: Border.all(color: const Color(0xFFEADFD6)),
+                ),
+                child: const Row(
+                  children: [
+                    Text('💡 ', style: TextStyle(fontSize: 14.0)),
+                    Expanded(
+                      child: Text(
+                        'Zero typing needed • Speak in your natural rhythm',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF6B4226),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
 
-              const SizedBox(height: 16.0),
+              const SizedBox(height: 20.0),
             ],
           ),
         ),
       ),
       bottomNavigationBar: ArtisanBottomNavigation(
-        currentIndex: 1,
-        onTap: widget.onNavigateTab,
+        currentIndex: 1, // Products tab active
+        onTap: (index) {
+          HardwareService().stopListening();
+          if (widget.onNavigateTab != null) {
+            widget.onNavigateTab!(index);
+          }
+        },
       ),
     );
   }
@@ -512,10 +684,9 @@ class _VoiceDescriptionScreenState extends State<VoiceDescriptionScreen> {
       height: height,
       margin: const EdgeInsets.symmetric(horizontal: 2.5),
       decoration: BoxDecoration(
-        color: const Color(0xFF8C3A16),
+        color: _isRecording ? const Color(0xFFA84318) : const Color(0xFFD3C3B8),
         borderRadius: BorderRadius.circular(2.0),
       ),
     );
   }
 }
-

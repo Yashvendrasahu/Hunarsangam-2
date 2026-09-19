@@ -75,7 +75,7 @@ class _BuyerReferenceImageScreenState extends State<BuyerReferenceImageScreen> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Use an image to show artisans the exact style, weave, shape or custom finishing you want.',
+                      'Use an image to show craft makers the exact style, weave, shape or custom finishing you want.',
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF6E5A4E),

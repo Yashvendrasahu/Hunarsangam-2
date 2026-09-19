@@ -244,7 +244,7 @@ class _ArtisanOrdersScreenState extends State<ArtisanOrdersScreen> {
             children: const [
               Text('PO: #PO-TBS-4419', style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF8C3A16))),
               SizedBox(height: 4.0),
-              Text('Buyer: The Bombay Store (Mumbai Retail Chain)'),
+              Text('Bulk Buyer: The Bombay Store (Mumbai Retail Chain)'),
               SizedBox(height: 12.0),
               Text('Item: 50 × Golden Cane Planter Basket', style: TextStyle(fontWeight: FontWeight.w600)),
               Text('Dimensions: 10" Base Dia × 8" Height'),
@@ -367,7 +367,7 @@ class _ArtisanOrdersScreenState extends State<ArtisanOrdersScreen> {
             icon: const Icon(Icons.menu, color: Color(0xFF2D2421)),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('HunarSangam Artisan Menu opened')),
+                const SnackBar(content: Text('HunarSangam Craft Maker Menu opened')),
               );
             },
           ),
@@ -397,7 +397,7 @@ class _ArtisanOrdersScreenState extends State<ArtisanOrdersScreen> {
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                       child: const Text(
-                        'Artisan',
+                        'Craft Maker',
                         style: TextStyle(
                           fontSize: 10.0,
                           fontWeight: FontWeight.w600,
@@ -484,7 +484,7 @@ class _ArtisanOrdersScreenState extends State<ArtisanOrdersScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Artisan Orders',
+              'Craft Maker Orders',
               style: TextStyle(
                 fontSize: 24.0,
                 fontWeight: FontWeight.w900,
@@ -790,7 +790,7 @@ class _ArtisanOrdersScreenState extends State<ArtisanOrdersScreen> {
                   ),
                   const SizedBox(height: 1.0),
                   const Text(
-                    'New Delhi • Verified Corporate Buyer',
+                    'New Delhi • Verified Corporate Bulk Buyer',
                     style: TextStyle(fontSize: 11.0, color: Color(0xFF6D4C41)),
                   ),
                 ],
@@ -1037,7 +1037,7 @@ class _ArtisanOrdersScreenState extends State<ArtisanOrdersScreen> {
                   ),
                   const SizedBox(height: 1.0),
                   const Text(
-                    'Mumbai • Retail Chain Buyer',
+                    'Mumbai • Retail Chain Bulk Buyer',
                     style: TextStyle(fontSize: 11.0, color: Color(0xFF6D4C41)),
                   ),
                 ],

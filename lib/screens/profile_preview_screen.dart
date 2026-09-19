@@ -42,7 +42,7 @@ class _ProfilePreviewScreenState extends State<ProfilePreviewScreen> {
             OnboardingHeader(
               currentStep: 5,
               totalSteps: 5,
-              stepLabel: 'Artisan Setup',
+              stepLabel: 'Craft Maker Setup',
               onBack: widget.onBack,
               currentLanguage: widget.state.selectedLanguage,
             ),

@@ -563,7 +563,7 @@ class _BuyerSearchResultsScreenState extends State<BuyerSearchResultsScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: const [
-                        Text('Artisans Engaged', style: TextStyle(fontSize: 10, color: _textMuted)),
+                        Text('Craft Makers Engaged', style: TextStyle(fontSize: 10, color: _textMuted)),
                         Text('32 Women Weavers', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _textDark)),
                       ],
                     ),
@@ -717,7 +717,7 @@ class _BuyerSearchResultsScreenState extends State<BuyerSearchResultsScreen> {
                     Icon(Icons.people, size: 13, color: _textMuted),
                     SizedBox(width: 4),
                     Text(
-                      'Artisan: Ramesh Kumar Collective',
+                      'Craft Maker: Ramesh Kumar Collective',
                       style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: _textDark),
                     ),
                   ],

@@ -66,7 +66,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
             OnboardingHeader(
               currentStep: 4,
               totalSteps: 5,
-              stepLabel: 'Artisan Setup',
+              stepLabel: 'Craft Maker Setup',
               onBack: widget.onBack,
               currentLanguage: widget.state.selectedLanguage,
             ),

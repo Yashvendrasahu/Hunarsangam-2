@@ -82,7 +82,7 @@ class _BuyerCompareArtisansScreenState extends State<BuyerCompareArtisansScreen>
                         child: const Padding(
                           padding: EdgeInsets.symmetric(vertical: 6),
                           child: Text(
-                            '← Back to Matched Artisans',
+                            '← Back to Matched Craft Makers',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -118,7 +118,7 @@ class _BuyerCompareArtisansScreenState extends State<BuyerCompareArtisansScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  'Compare Artisans',
+                  'Compare Craft Makers',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
@@ -208,7 +208,7 @@ class _BuyerCompareArtisansScreenState extends State<BuyerCompareArtisansScreen>
             children: [
               _buildBadge(Icons.account_balance_wallet_outlined, 'Target: ₹380 / pc'),
               _buildBadge(Icons.calendar_today_outlined, 'Delivery by Oct 28'),
-              _buildBadge(Icons.verified, 'Verified Artisans', isSuccess: true),
+              _buildBadge(Icons.verified, 'Verified Craft Makers', isSuccess: true),
             ],
           ),
         ],
@@ -305,7 +305,7 @@ class _BuyerCompareArtisansScreenState extends State<BuyerCompareArtisansScreen>
             ),
             const SizedBox(width: 6),
             const Text(
-              '2 Artisans Selected for Evaluation',
+              '2 Craft Makers Selected for Evaluation',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
@@ -510,7 +510,7 @@ class _BuyerCompareArtisansScreenState extends State<BuyerCompareArtisansScreen>
           ),
           const SizedBox(height: 4),
           const Text(
-            'Price guidance is indicative and finalized upon mutual agreement with artisan.',
+            'Price guidance is indicative and finalized upon mutual agreement with craft maker.',
             style: TextStyle(fontSize: 9, color: _textMuted, fontStyle: FontStyle.italic),
           ),
           const SizedBox(height: 14),
@@ -917,7 +917,7 @@ class _BuyerCompareArtisansScreenState extends State<BuyerCompareArtisansScreen>
           child: OutlinedButton.icon(
             onPressed: widget.onMessageArtisans,
             icon: const Icon(Icons.chat_bubble_outline, size: 14),
-            label: const Text('Message Artisans', style: TextStyle(fontSize: 11)),
+            label: const Text('Message Craft Makers', style: TextStyle(fontSize: 11)),
             style: OutlinedButton.styleFrom(
               foregroundColor: _textDark,
               side: const BorderSide(color: Color(0xFFDFC8BA)),
@@ -931,7 +931,7 @@ class _BuyerCompareArtisansScreenState extends State<BuyerCompareArtisansScreen>
           child: ElevatedButton.icon(
             onPressed: () => widget.onSelectArtisan != null ? widget.onSelectArtisan!('ramesh') : null,
             icon: const Icon(Icons.check, size: 14),
-            label: const Text('Select Artisan', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+            label: const Text('Select Craft Maker', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryRust,
               foregroundColor: Colors.white,

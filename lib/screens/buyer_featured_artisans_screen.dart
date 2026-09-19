@@ -69,7 +69,7 @@ class _BuyerFeaturedArtisansScreenState extends State<BuyerFeaturedArtisansScree
 
               // Title & Subtitle
               const Text(
-                'Featured Master Artisans',
+                'Featured Master Craft Makers',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
@@ -99,7 +99,7 @@ class _BuyerFeaturedArtisansScreenState extends State<BuyerFeaturedArtisansScree
                   {'label': 'GI Cluster Lead', 'color': _successGreen, 'bg': const Color(0xFFE8F5E9), 'icon': Icons.verified},
                   {'label': '32 Weavers Network', 'color': const Color(0xFF6A4028), 'bg': const Color(0xFFF3ECE4), 'icon': Icons.people},
                 ],
-                audioText: 'Listen to Artisan (Assamese/Hindi)  0:42',
+                audioText: 'Listen to Craft Maker (Assamese/Hindi)  0:42',
                 stat1Label: 'Production Capacity',
                 stat1Value: '500 pcs/month',
                 stat2Label: 'Bulk Order Lead Time',
@@ -121,7 +121,7 @@ class _BuyerFeaturedArtisansScreenState extends State<BuyerFeaturedArtisansScree
                   {'label': 'State Awardee', 'color': const Color(0xFFD87D10), 'bg': const Color(0xFFFFF3E0), 'icon': Icons.emoji_events},
                   {'label': 'Lead-Free Certified', 'color': _successGreen, 'bg': const Color(0xFFE8F5E9), 'icon': Icons.check_circle},
                 ],
-                audioText: 'Listen to Artisan (Hindi/Rajasthani)  0:58',
+                audioText: 'Listen to Craft Maker (Hindi/Rajasthani)  0:58',
                 stat1Label: 'Production Capacity',
                 stat1Value: '1,200 units/month',
                 stat2Label: 'Export Packaging',
@@ -140,10 +140,10 @@ class _BuyerFeaturedArtisansScreenState extends State<BuyerFeaturedArtisansScree
                 experience: 'Collective Cluster',
                 imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
                 badges: [
-                  {'label': 'Women Self-Help Group Head (45 Artisans)', 'color': _successGreen, 'bg': const Color(0xFFE8F5E9), 'icon': Icons.groups},
+                  {'label': 'Women Self-Help Group Head (45 Craft Makers)', 'color': _successGreen, 'bg': const Color(0xFFE8F5E9), 'icon': Icons.groups},
                   {'label': '100% Organic Pigments', 'color': const Color(0xFFC2410C), 'bg': const Color(0xFFFFF7ED), 'icon': Icons.eco},
                 ],
-                audioText: 'Listen to Artisan (Maithili/Hindi)  0:35',
+                audioText: 'Listen to Craft Maker (Maithili/Hindi)  0:35',
                 stat1Label: 'Production Capacity',
                 stat1Value: '400 pcs/month',
                 stat2Label: 'Direct Cluster Impact',
@@ -590,7 +590,7 @@ class _BuyerFeaturedArtisansScreenState extends State<BuyerFeaturedArtisansScree
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('View Artisan Profile', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                          Text('View Craft Maker Profile', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                           SizedBox(width: 6),
                           Icon(Icons.arrow_forward, size: 16),
                         ],

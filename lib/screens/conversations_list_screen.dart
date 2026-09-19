@@ -117,7 +117,7 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isArtisan ? 'Bulk Buyer Messages' : 'Artisan Order Chats',
+              isArtisan ? 'Bulk Buyer Messages' : 'Craft Maker Order Chats',
               style: const TextStyle(
                 color: textDark,
                 fontSize: 16.5,

@@ -73,7 +73,7 @@ class _BuyerReviewMatchScreenState extends State<BuyerReviewMatchScreen> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Review your bulk sourcing specifications before our algorithm identifies suitable artisan clusters.',
+                      'Review your bulk sourcing specifications before our algorithm identifies suitable craft maker clusters.',
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF6B5A4E),
@@ -644,7 +644,7 @@ class _BuyerReviewMatchScreenState extends State<BuyerReviewMatchScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
                 Text(
-                  'Publish & Find Matching Artisans',
+                  'Publish & Find Matching Craft Makers',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
                 ),
                 SizedBox(width: 8),
@@ -660,7 +660,7 @@ class _BuyerReviewMatchScreenState extends State<BuyerReviewMatchScreen> {
             Icon(Icons.podcasts, size: 14, color: _primaryRust),
             SizedBox(width: 6),
             Text(
-              'Ready to connect with qualified master artisans\nacross India.',
+              'Ready to connect with qualified master craft makers\nacross India.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 11,

@@ -94,7 +94,7 @@ class OnboardingHeader extends StatelessWidget {
                   ),
                   const SizedBox(width: 6.0),
                   Text(
-                    'Step $currentStep of $totalSteps • ${stepLabel ?? "Artisan Setup"}',
+                    'Step $currentStep of $totalSteps • ${stepLabel ?? "Craft Maker Setup"}',
                     style: const TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,

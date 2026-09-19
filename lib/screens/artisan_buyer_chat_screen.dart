@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import '../models/chat_models.dart';
 import '../services/chat_service.dart';
+import '../services/hardware_service.dart';
 
 class ArtisanBuyerChatScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -25,7 +26,7 @@ class ArtisanBuyerChatScreen extends StatefulWidget {
     this.onEscrowTap,
     this.onCameraTap,
     this.conversationId = 'conv-heritage-ramu-1048',
-    this.buyerName = 'Heritage Handcrafts (Buyer)',
+    this.buyerName = 'Heritage Handcrafts (Bulk Buyer)',
     this.orderId = 'REQ-HH-1048',
     this.orderTitle = '50 pcs Cane Baskets',
     this.escrowAmount = '₹22,500',
@@ -42,14 +43,87 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
   final ChatService _chatService = ChatService();
   
   bool _isMicPressed = false;
-  bool _isBuyerAudioPlaying = false;
-  bool _isArtisanVoicePlaying = false;
-  bool _isBuyerSecondAudioPlaying = false;
+  String? _activeAudioPlayingId;
   bool _isLoadingGeminiSuggestions = false;
   String _activeTranslationMode = 'हिंदी / En';
 
   List<ChatMessage> _messages = [];
   List<ChatAiSuggestion> _geminiSuggestions = [];
+
+  void _playMessageAudio(String id, String text, {String lang = 'hi-IN'}) {
+    if (_activeAudioPlayingId == id) {
+      HardwareService().stopAudio();
+      setState(() => _activeAudioPlayingId = null);
+    } else {
+      setState(() => _activeAudioPlayingId = id);
+      HardwareService().speakText(
+        text,
+        language: lang,
+        onDone: () {
+          if (mounted) setState(() => _activeAudioPlayingId = null);
+        },
+      );
+    }
+  }
+
+  void _toggleVoiceRecording() async {
+    if (_isMicPressed) {
+      await HardwareService().stopListening();
+      setState(() => _isMicPressed = false);
+    } else {
+      setState(() => _isMicPressed = true);
+      final started = await HardwareService().startListening(
+        language: 'hi-IN',
+        onResult: (text, isFinal) {
+          if (mounted) {
+            setState(() {
+              _textController.text = text;
+              _textController.selection = TextSelection.fromPosition(
+                TextPosition(offset: _textController.text.length),
+              );
+            });
+          }
+        },
+        onError: (err) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(err), backgroundColor: const Color(0xFF8C3A16)),
+            );
+          }
+        },
+        onStopped: () {
+          if (mounted) setState(() => _isMicPressed = false);
+        },
+      );
+      if (!started && mounted) {
+        setState(() => _isMicPressed = false);
+      }
+    }
+  }
+
+  void _captureAndSendPhoto() async {
+    final image = await HardwareService().captureFromCamera();
+    if (image != null) {
+      await _chatService.sendMessage(
+        conversationId: widget.conversationId,
+        senderType: 'artisan',
+        senderName: 'Ramu Kumar',
+        senderId: '22222222-2222-2222-2222-222222222222',
+        content: '📸 Production photo updated: ${image.fileName}',
+        translatedContent: '📸 Production floor photo attached for verification.',
+        orderId: widget.orderId,
+      );
+      _scrollToBottom();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('📸 Production photo captured and shared with buyer!'),
+            backgroundColor: Color(0xFF1B7339),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -111,6 +185,8 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
 
   @override
   void dispose() {
+    HardwareService().stopAudio();
+    HardwareService().stopListening();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -198,15 +274,16 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                         'Hello Ramu ji, we saw your catalog sample of the Woven Bamboo Baskets. Can you confirm if all 50 pieces will have the natural lacquer waterproof finish?',
                     hindiTranslation:
                         'नमस्ते रामू जी, हमने आपके बांस की टोकरियों का कैटलॉग सैंपल देखा। क्या आप पुष्टि कर सकते हैं कि सभी 50 पीस में प्राकृतिक लैकर वाटरप्रूफ फिनिश होगी?',
-                    isPlaying: _isBuyerAudioPlaying,
-                    onToggleAudio: () {
-                      setState(() {
-                        _isBuyerAudioPlaying = !_isBuyerAudioPlaying;
-                      });
-                    },
+                    isPlaying: _activeAudioPlayingId == 'seed-buyer-msg',
+                    onToggleAudio: () => _playMessageAudio(
+                      'seed-buyer-msg',
+                      'नमस्ते रामू जी, हमने आपके बांस की टोकरियों का कैटलॉग सैंपल देखा। क्या आप पुष्टि कर सकते हैं कि सभी 50 पीस में प्राकृतिक लैकर वाटरप्रूफ फिनिश होगी?',
+                      lang: 'hi-IN',
+                    ),
                   ),
                 ] else ...[
                   ..._messages.map((msg) {
+                    final msgId = msg.id.isNotEmpty ? msg.id : msg.content.hashCode.toString();
                     if (msg.isBuyer) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 14),
@@ -214,8 +291,12 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                           time: msg.time,
                           originalEnglish: msg.content,
                           hindiTranslation: msg.translatedContent ?? msg.content,
-                          isPlaying: false,
-                          onToggleAudio: () {},
+                          isPlaying: _activeAudioPlayingId == msgId,
+                          onToggleAudio: () => _playMessageAudio(
+                            msgId,
+                            msg.translatedContent ?? msg.content,
+                            lang: 'hi-IN',
+                          ),
                         ),
                       );
                     } else {
@@ -228,12 +309,12 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                             duration: msg.audioDuration ?? '0:18',
                             hindiTranscript: msg.content,
                             englishForBuyer: msg.translatedContent ?? msg.content,
-                            isPlaying: _isArtisanVoicePlaying,
-                            onTogglePlay: () {
-                              setState(() {
-                                _isArtisanVoicePlaying = !_isArtisanVoicePlaying;
-                              });
-                            },
+                            isPlaying: _activeAudioPlayingId == msgId,
+                            onTogglePlay: () => _playMessageAudio(
+                              msgId,
+                              msg.content,
+                              lang: 'hi-IN',
+                            ),
                           ),
                         );
                       }
@@ -640,7 +721,7 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Heritage Handcrafts (Buyer)',
+                        'Heritage Handcrafts (Bulk Buyer)',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
@@ -872,7 +953,7 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                   style: const TextStyle(fontSize: 9.5, color: Color(0xFF5D4037)),
                   children: [
                     const TextSpan(
-                      text: 'English Delivered to Buyer: ',
+                      text: 'English Delivered to Bulk Buyer: ',
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
                         color: Color(0xFF8C3A16),
@@ -1115,12 +1196,7 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   icon: const Icon(Icons.camera_alt_outlined, size: 20, color: Color(0xFF1B7339)),
-                  onPressed: widget.onCameraTap ??
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('📷 Capture production floor photo...')),
-                        );
-                      },
+                  onPressed: widget.onCameraTap ?? _captureAndSendPhoto,
                 ),
               ),
               const SizedBox(width: 6),
@@ -1167,14 +1243,7 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                 ),
               ] else ...[
                 GestureDetector(
-                  onTapDown: (_) => setState(() => _isMicPressed = true),
-                  onTapUp: (_) {
-                    setState(() => _isMicPressed = false);
-                    _sendMessage(
-                      'Ji bilkul, kal tak 10 pieces ki photo bhej denge.',
-                      translation: 'Yes definitely, will send photos of the 10 pieces by tomorrow.',
-                    );
-                  },
+                  onTap: _toggleVoiceRecording,
                   child: Container(
                     width: 38,
                     height: 38,
@@ -1182,7 +1251,11 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                       color: _isMicPressed ? Colors.red : const Color(0xFF8C3A16),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.mic, color: Colors.white, size: 20),
+                    child: Icon(
+                      _isMicPressed ? Icons.stop : Icons.mic,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ],

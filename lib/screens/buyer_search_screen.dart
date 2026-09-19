@@ -163,7 +163,7 @@ class _BuyerSearchScreenState extends State<BuyerSearchScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                       decoration: const InputDecoration(
-                        hintText: 'Search artisans, crafts or products|',
+                        hintText: 'Search craft makers, crafts or products|',
                         hintStyle: TextStyle(
                           color: Color(0xFF8C7A70),
                           fontSize: 13.5,
@@ -649,7 +649,7 @@ class _BuyerSearchScreenState extends State<BuyerSearchScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  'Verified Artisan Production',
+                  'Verified Craft Maker Production',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
@@ -658,7 +658,7 @@ class _BuyerSearchScreenState extends State<BuyerSearchScreen> {
                 ),
                 SizedBox(height: 3),
                 Text(
-                  'Escrow payment security, sample verification, and direct state artisan cluster logistics.',
+                  'Escrow payment security, sample verification, and direct state craft maker cluster logistics.',
                   style: TextStyle(
                     fontSize: 11,
                     color: Color(0xFF386B3E),

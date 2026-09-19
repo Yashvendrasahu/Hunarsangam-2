@@ -370,7 +370,7 @@ class _CollaborationHubScreenState extends State<CollaborationHubScreen> {
         ),
         const SizedBox(height: 4.0),
         const Text(
-          'Artisans want you to help complete their orders.',
+          'Craft Makers want you to help complete their orders.',
           style: TextStyle(
             color: _textMuted,
             fontSize: 12.0,
@@ -939,7 +939,7 @@ class _CollaborationHubScreenState extends State<CollaborationHubScreen> {
                 ),
                 Text.rich(
                   TextSpan(
-                    text: 'Buyer: ',
+                    text: 'Bulk Buyer: ',
                     style: TextStyle(color: _textMuted, fontSize: 11.0),
                     children: [
                       TextSpan(
@@ -1057,7 +1057,7 @@ class _CollaborationHubScreenState extends State<CollaborationHubScreen> {
         ),
         const SizedBox(height: 4.0),
         const Text(
-          "Artisans you've invited to collaborate on your active orders.",
+          "Craft Makers you've invited to collaborate on your active orders.",
           style: TextStyle(
             color: _textMuted,
             fontSize: 12.0,
@@ -1120,7 +1120,7 @@ class _CollaborationHubScreenState extends State<CollaborationHubScreen> {
                     ),
                     SizedBox(height: 1),
                     Text(
-                      'Bamboo Craft Artisan • Kamrup',
+                      'Bamboo Craft Maker • Kamrup',
                       style: TextStyle(color: _textMuted, fontSize: 11.0, fontWeight: FontWeight.w500),
                     ),
                   ],

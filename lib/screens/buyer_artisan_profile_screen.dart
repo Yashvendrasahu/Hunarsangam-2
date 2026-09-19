@@ -118,7 +118,7 @@ class _BuyerArtisanProfileScreenState extends State<BuyerArtisanProfileScreen> {
             ),
           ),
           Text(
-            'Artisan Profile',
+            'Craft Maker Profile',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w900,
@@ -129,13 +129,13 @@ class _BuyerArtisanProfileScreenState extends State<BuyerArtisanProfileScreen> {
       ),
       actions: [
         IconButton(
-          onPressed: () => _showSnack('Artisan profile link copied to clipboard'),
+          onPressed: () => _showSnack('Craft Maker profile link copied to clipboard'),
           icon: const Icon(Icons.share_outlined, color: _textDark, size: 20),
         ),
         IconButton(
           onPressed: () {
             setState(() => _isSaved = !_isSaved);
-            _showSnack(_isSaved ? 'Artisan saved to your favorites' : 'Removed from favorites');
+            _showSnack(_isSaved ? 'Craft Maker saved to your favorites' : 'Removed from favorites');
           },
           icon: Icon(_isSaved ? Icons.bookmark : Icons.bookmark_border, color: _isSaved ? _primaryRust : _textDark, size: 20),
         ),
@@ -478,10 +478,10 @@ class _BuyerArtisanProfileScreenState extends State<BuyerArtisanProfileScreen> {
                       child: const Icon(Icons.people_outline, size: 16, color: _primaryRust),
                     ),
                     const SizedBox(height: 8),
-                    const Text('Cluster Artisans', style: TextStyle(fontSize: 10.5, color: _textMuted)),
+                    const Text('Cluster Craft Makers', style: TextStyle(fontSize: 10.5, color: _textMuted)),
                     const SizedBox(height: 2),
                     const Text(
-                      '42 Artisans',
+                      '42 Craft Makers',
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: _textDark),
                     ),
                     const SizedBox(height: 2),
@@ -761,7 +761,7 @@ class _BuyerArtisanProfileScreenState extends State<BuyerArtisanProfileScreen> {
             child: OutlinedButton.icon(
               onPressed: widget.onMessageArtisan ?? () => _showSnack('Opening chat with Ramesh Kumar'),
               icon: const Icon(Icons.chat_bubble_outline, size: 15, color: _textDark),
-              label: const Text('Message Artisan', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _textDark)),
+              label: const Text('Message Craft Maker', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _textDark)),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFDCCDC2)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -773,7 +773,7 @@ class _BuyerArtisanProfileScreenState extends State<BuyerArtisanProfileScreen> {
           Expanded(
             flex: 3,
             child: ElevatedButton(
-              onPressed: widget.onCreateRequirement ?? () => _showSnack('Select Artisan for new requirement'),
+              onPressed: widget.onCreateRequirement ?? () => _showSnack('Select Craft Maker for new requirement'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primaryRust,
                 foregroundColor: Colors.white,
@@ -784,7 +784,7 @@ class _BuyerArtisanProfileScreenState extends State<BuyerArtisanProfileScreen> {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Create Requirement / Select Artisan', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                  Text('Create Requirement / Select Craft Maker', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
                   SizedBox(width: 4),
                   Icon(Icons.arrow_forward, size: 14),
                 ],

@@ -329,7 +329,7 @@ class _BuyerRequirementsScreenState extends State<BuyerRequirementsScreen> {
               Text('›', style: TextStyle(color: Colors.white.withOpacity(0.4))),
               _buildStepIcon(Icons.calendar_today_outlined, 'Date'),
               Text('›', style: TextStyle(color: Colors.white.withOpacity(0.4))),
-              _buildStepIcon(Icons.people_outline, 'Artisans'),
+              _buildStepIcon(Icons.people_outline, 'Craft Makers'),
             ],
           ),
         ],

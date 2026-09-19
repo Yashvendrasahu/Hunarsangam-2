@@ -74,6 +74,7 @@ file:///app/applet/lib/services/ai_service.dart
 file:///app/applet/lib/services/auth_service.dart
 file:///app/applet/lib/services/chat_service.dart
 file:///app/applet/lib/services/collaboration_service.dart
+file:///app/applet/lib/services/hardware_service.dart
 file:///app/applet/lib/services/notification_service.dart
 file:///app/applet/lib/services/order_service.dart
 file:///app/applet/lib/services/product_service.dart

@@ -395,7 +395,7 @@ class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
                 iconColor: const Color(0xFF6B584E),
                 iconBg: const Color(0xFFF3E7DF),
                 value: '1,420',
-                label: 'Buyer Views',
+                label: 'Bulk Buyer Views',
               ),
             ),
             const SizedBox(width: 10.0),

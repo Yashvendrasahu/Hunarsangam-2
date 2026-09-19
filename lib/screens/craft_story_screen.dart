@@ -1,6 +1,7 @@
 // lib/screens/craft_story_screen.dart
 // My Craft Story Screen (AI-Powered Voice-First Artisan Storytelling)
 import 'package:flutter/material.dart';
+import '../services/hardware_service.dart';
 
 class CraftStoryScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -28,6 +29,88 @@ class _CraftStoryScreenState extends State<CraftStoryScreen> {
   bool _isPlayingVoiceNote = false;
   bool _isPlayingAudioGuide = false;
   bool _isRecording = false;
+  String _recordedStory = '';
+
+  @override
+  void dispose() {
+    HardwareService().stopAudio();
+    HardwareService().stopListening();
+    super.dispose();
+  }
+
+  void _toggleAudioGuide() {
+    if (_isPlayingAudioGuide) {
+      HardwareService().stopAudio();
+      setState(() => _isPlayingAudioGuide = false);
+    } else {
+      setState(() => _isPlayingAudioGuide = true);
+      HardwareService().speakText(
+        'Welcome to My Craft Story. Speak naturally in your native voice about your craft heritage, weaving tradition, and master artisans. AI will structure this into a story for global buyers.',
+        language: 'en-IN',
+        onDone: () {
+          if (mounted) setState(() => _isPlayingAudioGuide = false);
+        },
+      );
+    }
+  }
+
+  void _playPrompt() {
+    HardwareService().speakText(
+      'I learned cane weaving from my father. Our bamboo is hand-harvested from mature riverbed groves and seasoned naturally.',
+      language: 'en-IN',
+    );
+  }
+
+  void _toggleRecord() async {
+    if (_isRecording) {
+      await HardwareService().stopListening();
+      setState(() => _isRecording = false);
+    } else {
+      setState(() => _isRecording = true);
+      final started = await HardwareService().startListening(
+        language: 'hi-IN',
+        onResult: (text, isFinal) {
+          if (mounted) {
+            setState(() {
+              _recordedStory = text;
+            });
+          }
+        },
+        onError: (err) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(err), backgroundColor: const Color(0xFF8C3A16)),
+            );
+          }
+        },
+        onStopped: () {
+          if (mounted) setState(() => _isRecording = false);
+        },
+      );
+      if (!started && mounted) {
+        setState(() => _isRecording = false);
+      }
+    }
+  }
+
+  void _togglePlayVoiceNote() {
+    if (_isPlayingVoiceNote) {
+      HardwareService().stopAudio();
+      setState(() => _isPlayingVoiceNote = false);
+    } else {
+      setState(() => _isPlayingVoiceNote = true);
+      final storyText = _recordedStory.isNotEmpty
+          ? _recordedStory
+          : 'I learned cane weaving from my father. Passed down through three generations in Assam, every piece is handcrafted with organic bamboo and food-safe finish.';
+      HardwareService().speakText(
+        storyText,
+        language: 'en-IN',
+        onDone: () {
+          if (mounted) setState(() => _isPlayingVoiceNote = false);
+        },
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,9 +195,7 @@ class _CraftStoryScreenState extends State<CraftStoryScreen> {
               // Audio Guide Pill Button
               InkWell(
                 onTap: () {
-                  setState(() {
-                    _isPlayingAudioGuide = !_isPlayingAudioGuide;
-                  });
+                  _toggleAudioGuide();
                   if (widget.onAudioGuideToggle != null) widget.onAudioGuideToggle!();
                 },
                 borderRadius: BorderRadius.circular(20.0),
@@ -403,37 +484,40 @@ class _CraftStoryScreenState extends State<CraftStoryScreen> {
           const SizedBox(height: 12.0),
 
           // Prompt Suggestion Box
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF0E7),
-              borderRadius: BorderRadius.circular(14.0),
-              border: Border.all(color: const Color(0xFFFCDCCE)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 24.0,
-                  height: 24.0,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF8C2E18),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.play_arrow, color: Colors.white, size: 14.0),
-                ),
-                const SizedBox(width: 8.0),
-                const Expanded(
-                  child: Text(
-                    'Prompt: "I learned cane weaving from my father..."',
-                    style: TextStyle(
-                      fontSize: 11.0,
-                      fontStyle: FontStyle.italic,
-                      color: Color(0xFF6B584E),
+          GestureDetector(
+            onTap: _playPrompt,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF0E7),
+                borderRadius: BorderRadius.circular(14.0),
+                border: Border.all(color: const Color(0xFFFCDCCE)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 24.0,
+                    height: 24.0,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF8C2E18),
+                      shape: BoxShape.circle,
                     ),
-                    overflow: TextOverflow.ellipsis,
+                    child: const Icon(Icons.play_arrow, color: Colors.white, size: 14.0),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8.0),
+                  const Expanded(
+                    child: Text(
+                      'Prompt: "I learned cane weaving from my father..."',
+                      style: TextStyle(
+                        fontSize: 11.0,
+                        fontStyle: FontStyle.italic,
+                        color: Color(0xFF6B584E),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 14.0),
@@ -444,16 +528,14 @@ class _CraftStoryScreenState extends State<CraftStoryScreen> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    setState(() {
-                      _isRecording = !_isRecording;
-                    });
+                    _toggleRecord();
                     if (widget.onRecordVoice != null) widget.onRecordVoice!();
                   },
                   child: Container(
                     width: 68.0,
                     height: 68.0,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFCE2D5),
+                      color: _isRecording ? const Color(0xFFFFD5C0) : const Color(0xFFFCE2D5),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -467,8 +549,8 @@ class _CraftStoryScreenState extends State<CraftStoryScreen> {
                       child: Container(
                         width: 52.0,
                         height: 52.0,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF8C2E18),
+                        decoration: BoxDecoration(
+                          color: _isRecording ? Colors.red : const Color(0xFF8C2E18),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -481,9 +563,9 @@ class _CraftStoryScreenState extends State<CraftStoryScreen> {
                   ),
                 ),
                 const SizedBox(height: 6.0),
-                const Text(
-                  'Tap to Record New Note',
-                  style: TextStyle(
+                Text(
+                  _isRecording ? '🔴 Listening... Tap to Finish' : 'Tap to Record New Note',
+                  style: const TextStyle(
                     fontSize: 12.0,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF221C19),
@@ -513,16 +595,16 @@ class _CraftStoryScreenState extends State<CraftStoryScreen> {
             ),
             child: Column(
               children: [
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.circle, color: Color(0xFF2E7D32), size: 8.0),
-                        SizedBox(width: 6.0),
+                        const Icon(Icons.circle, color: Color(0xFF2E7D32), size: 8.0),
+                        const SizedBox(width: 6.0),
                         Text(
-                          'Artisan Voice Note (0:48)',
-                          style: TextStyle(
+                          _recordedStory.isNotEmpty ? 'Craft Maker Voice Note (Recorded)' : 'Craft Maker Voice Note (0:48)',
+                          style: const TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFF221C19),
@@ -530,7 +612,7 @@ class _CraftStoryScreenState extends State<CraftStoryScreen> {
                         ),
                       ],
                     ),
-                    Text(
+                    const Text(
                       'Recorded Today',
                       style: TextStyle(
                         fontSize: 10.0,
@@ -544,11 +626,7 @@ class _CraftStoryScreenState extends State<CraftStoryScreen> {
                 Row(
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _isPlayingVoiceNote = !_isPlayingVoiceNote;
-                        });
-                      },
+                      onTap: _togglePlayVoiceNote,
                       child: Container(
                         width: 28.0,
                         height: 28.0,

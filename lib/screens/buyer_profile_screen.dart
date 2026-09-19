@@ -433,7 +433,7 @@ class _BuyerProfileScreenState extends State<BuyerProfileScreen> {
                       const SizedBox(height: 14),
 
                       const Text(
-                        'Priority Artisan Clusters',
+                        'Priority Craft Maker Clusters',
                         style: TextStyle(color: textMuted, fontSize: 11, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),

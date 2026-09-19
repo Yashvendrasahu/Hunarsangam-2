@@ -185,7 +185,7 @@ class BuyerProfileConfirmationScreen extends StatelessWidget {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 12.0),
           child: Text(
-            'Now discover artisans, explore handmade products and send bulk requirements directly to craft clusters.',
+            'Now discover craft makers, explore handmade products and send bulk requirements directly to craft clusters.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12.5,
@@ -266,11 +266,11 @@ class BuyerProfileConfirmationScreen extends StatelessWidget {
   Widget _buildCapabilityCards(BuildContext context) {
     return Column(
       children: [
-        // Card 1: Discover Artisans
+        // Card 1: Discover Craft Makers
         _buildCapabilityCard(
           icon: Icons.people_alt_outlined,
-          title: 'Discover Artisans',
-          subtitle: 'Explore master artisans from 120+ GI craft clusters across India.',
+          title: 'Discover Craft Makers',
+          subtitle: 'Explore master craft makers from 120+ GI craft clusters across India.',
           tags: [
             _buildTag(
               icon: Icons.shield_outlined,
@@ -469,7 +469,7 @@ class BuyerProfileConfirmationScreen extends StatelessWidget {
         SizedBox(width: 6.0),
         Flexible(
           child: Text(
-            'Direct settlements directly empowering rural artisan clusters.',
+            'Direct settlements directly empowering rural craft maker clusters.',
             style: TextStyle(
               fontSize: 11,
               color: Color(0xFF6B5A51),

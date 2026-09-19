@@ -289,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 20.0),
 
                     Text(
-                      _isBuyerRole ? 'Enterprise Buyer Login' : 'Artisan Sign In / लॉगिन करें',
+                      _isBuyerRole ? 'Bulk Buyer Login' : 'Craft Maker Sign In / लॉगिन करें',
                       style: const TextStyle(
                         fontSize: 26.0,
                         fontWeight: FontWeight.w800,
@@ -300,8 +300,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 4.0),
                     Text(
                       _isBuyerRole
-                          ? 'Access verified artisan clusters, place bulk RFQs & track escrow orders.'
-                          : 'Manage your craft listings, view buyer purchase orders & production progress.',
+                          ? 'Access verified craft maker clusters, place bulk RFQs & track escrow orders.'
+                          : 'Manage your craft listings, view bulk buyer purchase orders & production progress.',
                       style: const TextStyle(
                         fontSize: 13.5,
                         color: Color(0xFF6B584E),
@@ -568,7 +568,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    _isBuyerRole ? 'Login to Buyer Hub' : 'Sign In / लॉगिन करें',
+                                    _isBuyerRole ? 'Login to Bulk Buyer Hub' : 'Sign In / लॉगिन करें',
                                     style: const TextStyle(
                                       fontSize: 16.0,
                                       fontWeight: FontWeight.w800,
@@ -705,7 +705,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(width: 6.0),
                     Text(
-                      'Artisan / कारीगर',
+                      'Craft Maker / कारीगर',
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
@@ -787,7 +787,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   backgroundColor: !_isBuyerRole ? const Color(0xFFFFF2EC) : Colors.white,
                 ),
                 child: const Text(
-                  '🎨 Artisan (Ramu)',
+                  '🎨 Craft Maker (Ramu)',
                   style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w700, color: Color(0xFF2D2421)),
                 ),
               ),
@@ -806,7 +806,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   backgroundColor: _isBuyerRole ? const Color(0xFFFFF2EC) : Colors.white,
                 ),
                 child: const Text(
-                  '🏢 Buyer (FabCraft)',
+                  '🏢 Bulk Buyer (FabCraft)',
                   style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w700, color: Color(0xFF2D2421)),
                 ),
               ),

@@ -108,13 +108,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
                     const SizedBox(height: 20.0),
 
-                    // Role 1: Artisan / Shilpkar Card
+                    // Role 1: Artisan / Shilpkar Card -> Craft Maker
                     _RoleCard(
                       isSelected: isArtisan,
                       onTap: () => _selectRole(UserRole.artisan),
                       icon: Icons.palette_rounded,
-                      roleBadge: 'ARTISAN / SHILPKAR',
-                      title: "I'm an Artisan",
+                      roleBadge: 'CRAFT MAKER / SHILPKAR',
+                      title: "I'm a Craft Maker",
                       description:
                           'Show your craft, create catalogs with your voice, sell to businesses, and collaborate on large orders.',
                       chips: const [
@@ -129,18 +129,18 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
                     const SizedBox(height: 16.0),
 
-                    // Role 2: Business Buyer Card
+                    // Role 2: Business Buyer Card -> Bulk Buyer
                     _RoleCard(
                       isSelected: isBuyer,
                       onTap: () => _selectRole(UserRole.buyer),
                       icon: Icons.storefront_rounded,
                       roleBadge: 'B2B BULK SOURCING',
-                      title: "I'm a Business Buyer",
+                      title: "I'm a Bulk Buyer",
                       description:
-                          'Find skilled artisans, source products in bulk, compare suitable suppliers, and track production.',
+                          'Find skilled craft makers, source products in bulk, compare suitable suppliers, and track production.',
                       chips: const [
                         '📦 📦 Bulk Sourcing',
-                        '⚡ ⚡ AI Artisan Match',
+                        '⚡ ⚡ AI Craft Maker Match',
                         '📷 💼 Visual Milestones',
                       ],
                       footerNote: 'Escrow & GI certification guaranteed • Tiered Quotes',
@@ -158,7 +158,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ActionButton(
-                text: isArtisan ? 'Continue as Artisan →' : 'Continue as Buyer →',
+                text: isArtisan ? 'Continue as Craft Maker →' : 'Continue as Bulk Buyer →',
                 footerNote: 'Designed for easy voice input and direct collaboration.',
                 footerIcon: Icons.lightbulb_outline_rounded,
                 onPressed: widget.onContinue,

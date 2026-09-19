@@ -120,7 +120,7 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
             OnboardingHeader(
               currentStep: 1,
               totalSteps: 5,
-              stepLabel: 'Artisan Registration',
+              stepLabel: 'Craft Maker Registration',
               onBack: widget.onBack,
               currentLanguage: widget.state.selectedLanguage,
             ),

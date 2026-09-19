@@ -243,7 +243,7 @@ class _BuyerOnboardingStep1ScreenState
         ),
         SizedBox(height: 4.0),
         Text(
-          'Help artisans understand your sourcing scale and procurement needs.',
+          'Help craft makers understand your sourcing scale and procurement needs.',
           style: TextStyle(
             color: _textMuted,
             fontSize: 12,
@@ -668,7 +668,7 @@ class _BuyerOnboardingStep1ScreenState
           SizedBox(width: 8.0),
           Expanded(
             child: Text(
-              'Your business information is verified to connect with certified GI artisan clusters.',
+              'Your business information is verified to connect with certified GI craft maker clusters.',
               style: TextStyle(
                 fontSize: 10.5,
                 color: Color(0xFF4A3B32),

@@ -367,7 +367,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                 Icon(Icons.sell_outlined, size: 12, color: Colors.white),
                 SizedBox(width: 5.0),
                 Text(
-                  'Direct Artisan Sourcing',
+                  'Direct Craft Maker Sourcing',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 11,
@@ -389,7 +389,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
           ),
           const SizedBox(height: 6.0),
           const Text(
-            'Tell us what you need and connect with suitable artisans directly.',
+            'Tell us what you need and connect with suitable craft makers directly.',
             style: TextStyle(
               fontSize: 12.5,
               color: Color(0xFFFBECE5),
@@ -672,7 +672,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                                   Icon(Icons.circle, size: 6, color: _successGreen),
                                   SizedBox(width: 4.0),
                                   Text(
-                                    'Finding Artisans',
+                                    'Finding Craft Makers',
                                     style: TextStyle(
                                       color: _successGreen,
                                       fontSize: 10,
@@ -705,7 +705,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                   Icon(Icons.group_outlined, size: 14, color: Color(0xFF5D4037)),
                   SizedBox(width: 5.0),
                   Text(
-                    '4 Artisans responded',
+                    '4 Craft Makers responded',
                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF4A3830)),
                   ),
                   SizedBox(width: 8.0),
@@ -928,7 +928,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                 ),
                 const SizedBox(height: 3.0),
                 Text(
-                  '👤 Artisan: $artisan',
+                  '👤 Craft Maker: $artisan',
                   style: const TextStyle(fontSize: 10, color: _textMuted),
                 ),
                 Text(
@@ -992,7 +992,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Artisans for You',
+              'Craft Makers for You',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
@@ -1008,7 +1008,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                 }
               },
               child: const Text(
-                'All Artisans ›',
+                'All Craft Makers ›',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -1199,7 +1199,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
                   Text(
-                    'View Artisan',
+                    'View Craft Maker',
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,
@@ -1302,7 +1302,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
             ),
             const SizedBox(height: 6.0),
             const Text(
-              'Broadcast your sourcing RFQ directly to certified artisan clusters across India.',
+              'Broadcast your sourcing RFQ directly to certified craft maker clusters across India.',
               style: TextStyle(fontSize: 12, color: _textMuted),
             ),
             const SizedBox(height: 16.0),

@@ -127,6 +127,16 @@ class _AddProductFlowState extends State<AddProductFlow> {
       case 1:
         // Screen 2: Product Photography Initial Camera (p2)
         return CameraCaptureScreen(
+          onImageCaptured: (image) {
+            if (image != null) {
+              setState(() {
+                _draft = _draft.copyWith(
+                  photoUrl: image.dataUrl,
+                  secondaryPhotoUrl: image.dataUrl,
+                );
+              });
+            }
+          },
           onCapture: () => _goToStep(2),
           onBack: () => _goToStep(0),
         );

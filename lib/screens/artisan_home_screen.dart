@@ -1084,7 +1084,7 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
               Icon(Icons.business_outlined, size: 15.0, color: Color(0xFF6B584E)),
               SizedBox(width: 5.0),
               Text(
-                'FabIndia Sourcing Hub (B2B Buyer)',
+                'FabIndia Sourcing Hub (Bulk Buyer)',
                 style: TextStyle(
                   fontSize: 13.0,
                   fontWeight: FontWeight.w500,
@@ -1658,7 +1658,7 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
                   Icon(Icons.verified_user_rounded, size: 18.0, color: Color(0xFF2E7D32)),
                   SizedBox(width: 6.0),
                   Text(
-                    'Artisan Score & Reliability',
+                    'Craft Maker Score & Reliability',
                     style: TextStyle(
                       fontSize: 14.0,
                       fontWeight: FontWeight.w800,
@@ -1733,7 +1733,7 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
                 child: Column(
                   children: const [
                     Text(
-                      'Artisan',
+                      'Craft Maker',
                       style: TextStyle(
                         fontSize: 15.0,
                         fontWeight: FontWeight.w800,

@@ -331,7 +331,7 @@ class _SuggestedCollaboratorsScreenState
                         SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            'Buyer: Heritage Handcrafts Pvt. Ltd.',
+                            'Bulk Buyer: Heritage Handcrafts Pvt. Ltd.',
                             style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w500,

@@ -142,7 +142,7 @@ class _CraftSelectionScreenState extends State<CraftSelectionScreen> {
             OnboardingHeader(
               currentStep: 3,
               totalSteps: 5,
-              stepLabel: 'Artisan Craft',
+              stepLabel: 'Craft Maker Craft',
               onBack: widget.onBack,
               currentLanguage: widget.state.selectedLanguage,
             ),

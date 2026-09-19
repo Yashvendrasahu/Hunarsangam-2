@@ -317,7 +317,7 @@ class _BuyerOrderDetailsScreenState extends State<BuyerOrderDetailsScreen> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'The artisan accepted your order. Bamboo basket weaving is actively underway at the cluster workshop.',
+                        'The craft maker accepted your order. Bamboo basket weaving is actively underway at the cluster workshop.',
                         style: TextStyle(
                           color: Color(0xFF5A483E),
                           fontSize: 11.5,
@@ -345,7 +345,7 @@ class _BuyerOrderDetailsScreenState extends State<BuyerOrderDetailsScreen> {
                             child: ElevatedButton.icon(
                               onPressed: widget.onMessageArtisan ?? () {},
                               icon: const Icon(Icons.chat_bubble_outline, size: 14),
-                              label: const Text('Message Artisan', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                              label: const Text('Message Craft Maker', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: primaryRust,
                                 foregroundColor: Colors.white,
@@ -508,7 +508,7 @@ class _BuyerOrderDetailsScreenState extends State<BuyerOrderDetailsScreen> {
                       ),
                       _buildMilestoneItem(
                         isCompleted: true,
-                        title: 'Artisan Selected',
+                        title: 'Craft Maker Selected',
                         time: '17 Sep, 10:42 AM',
                         desc: 'Matched with Barpeta Cane Cluster.',
                       ),
@@ -520,7 +520,7 @@ class _BuyerOrderDetailsScreenState extends State<BuyerOrderDetailsScreen> {
                       ),
                       _buildMilestoneItem(
                         isCompleted: true,
-                        title: 'Artisan Confirmation',
+                        title: 'Craft Maker Confirmation',
                         time: '17 Sep, 2:15 PM',
                         desc: 'Confirmed 500 pcs @ ₹380 / unit tier.',
                       ),
@@ -879,8 +879,8 @@ class _BuyerOrderDetailsScreenState extends State<BuyerOrderDetailsScreen> {
                       ),
                       const SizedBox(height: 12),
                       _buildLogRow('17 Sep, 4:30 PM', 'Production started at Barpeta cluster loom after material seasoning check.'),
-                      _buildLogRow('17 Sep, 2:15 PM', 'Artisan Ramesh Kumar accepted the bulk order agreement.'),
-                      _buildLogRow('17 Sep, 11:20 AM', 'Cluster artisan confirmed bamboo stock readiness and dimension specs.'),
+                      _buildLogRow('17 Sep, 2:15 PM', 'Craft Maker Ramesh Kumar accepted the bulk order agreement.'),
+                      _buildLogRow('17 Sep, 11:20 AM', 'Cluster craft maker confirmed bamboo stock readiness and dimension specs.'),
                       _buildLogRow('17 Sep, 10:45 AM', 'Bulk order created with ₹76,000 Milestone 1 locked in escrow vault.'),
                     ],
                   ),
@@ -908,7 +908,7 @@ class _BuyerOrderDetailsScreenState extends State<BuyerOrderDetailsScreen> {
                       child: ElevatedButton.icon(
                         onPressed: widget.onMessageArtisan ?? () {},
                         icon: const Icon(Icons.chat_bubble_outline, size: 15),
-                        label: const Text('Message Artisan', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        label: const Text('Message Craft Maker', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryRust,
                           foregroundColor: Colors.white,

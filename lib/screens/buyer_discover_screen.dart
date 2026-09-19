@@ -240,7 +240,7 @@ class _BuyerDiscoverScreenState extends State<BuyerDiscoverScreen> {
             const SizedBox(width: 10),
             const Expanded(
               child: Text(
-                'Search artisans, crafts or products...',
+                'Search craft makers, crafts or products...',
                 style: TextStyle(
                   color: Color(0xFF8C7A70),
                   fontSize: 13.5,
@@ -270,37 +270,37 @@ class _BuyerDiscoverScreenState extends State<BuyerDiscoverScreen> {
     final categories = [
       {
         'title': 'Pottery & Ceramics',
-        'count': '340+ Artisans',
+        'count': '340+ Craft Makers',
         'image': 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=300&q=80',
       },
       {
         'title': 'Handloom & Textiles',
-        'count': '510+ Artisans',
+        'count': '510+ Craft Makers',
         'image': 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&w=300&q=80',
       },
       {
         'title': 'Bamboo & Cane',
-        'count': '190+ Artisans',
+        'count': '190+ Craft Makers',
         'image': 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=300&q=80',
       },
       {
         'title': 'Woodcraft & Toys',
-        'count': '260+ Artisans',
+        'count': '260+ Craft Makers',
         'image': 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=300&q=80',
       },
       {
         'title': 'Metal & Dokra',
-        'count': '140+ Artisans',
+        'count': '140+ Craft Makers',
         'image': 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=300&q=80',
       },
       {
         'title': 'Leather & Tribal',
-        'count': '115+ Artisans',
+        'count': '115+ Craft Makers',
         'image': 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=300&q=80',
       },
       {
         'title': 'Jewellery',
-        'count': '180+ Artisans',
+        'count': '180+ Craft Makers',
         'image': 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=300&q=80',
       },
     ];
@@ -325,7 +325,7 @@ class _BuyerDiscoverScreenState extends State<BuyerDiscoverScreen> {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  'Procure directly across verified artisan domains',
+                  'Procure directly across verified craft maker domains',
                   style: TextStyle(fontSize: 11.5, color: _textMuted),
                 ),
               ],
@@ -454,7 +454,7 @@ class _BuyerDiscoverScreenState extends State<BuyerDiscoverScreen> {
                   Row(
                     children: const [
                       Text(
-                        'Featured Master Artisans',
+                        'Featured Master Craft Makers',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w900,
@@ -697,7 +697,7 @@ class _BuyerDiscoverScreenState extends State<BuyerDiscoverScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: const Text(
-                    'View Artisan',
+                    'View Craft Maker',
                     style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
                   ),
                 ),

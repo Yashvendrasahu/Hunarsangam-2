@@ -65,7 +65,7 @@ class _VoiceIntroScreenState extends State<VoiceIntroScreen> with SingleTickerPr
             OnboardingHeader(
               currentStep: 2,
               totalSteps: 5,
-              stepLabel: 'Artisan Setup',
+              stepLabel: 'Craft Maker Setup',
               onBack: widget.onBack,
               currentLanguage: widget.state.selectedLanguage,
             ),

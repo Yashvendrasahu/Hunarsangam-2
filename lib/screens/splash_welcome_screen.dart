@@ -194,7 +194,7 @@ class _SplashWelcomeScreenState extends State<SplashWelcomeScreen> {
 
                           // Subtitle Headline
                           const Text(
-                            'Where Artisans Connect,\nCollaborate & Grow',
+                            'Where Craft Makers Connect,\nCollaborate & Grow',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 17.5,

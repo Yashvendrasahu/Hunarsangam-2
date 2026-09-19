@@ -191,7 +191,7 @@ class _ArtisanCollectiveScreenState extends State<ArtisanCollectiveScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            'Form Artisan Collective',
+            'Form Craft Maker Collective',
             style: TextStyle(
               color: _textDark,
               fontSize: 16,
@@ -1149,7 +1149,7 @@ class _ArtisanCollectiveScreenState extends State<ArtisanCollectiveScreen> {
               Icon(Icons.chat_bubble_outline, size: 12, color: _greenCheck),
               SizedBox(width: 4),
               Text(
-                'Artisans receive WhatsApp & Voice call invites with audio confirmation',
+                'Craft Makers receive WhatsApp & Voice call invites with audio confirmation',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
