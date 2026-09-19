@@ -36,6 +36,7 @@ import 'screens/buyer_orders_hub_screen.dart';
 import 'screens/buyer_profile_screen.dart';
 import 'screens/buyer_order_details_screen.dart';
 import 'screens/buyer_artisan_chat_screen.dart';
+import 'screens/conversations_list_screen.dart';
 import 'services/supabase_service.dart';
 import 'services/auth_service.dart';
 
@@ -520,6 +521,21 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
       return BuyerArtisanChatScreen(
         onBack: () => setState(() => _buyerStep = 20),
         onViewOrder: () => setState(() => _buyerStep = 22),
+        onOpenConversations: () => setState(() => _buyerStep = 24),
+      );
+    }
+
+    // Screen: Buyer Discussions / Conversations Hub
+    if (_buyerStep == 24) {
+      return ConversationsListScreen(
+        userRole: 'buyer',
+        currentUserName: 'FabIndia Sourcing Hub',
+        onBack: () => setState(() => _buyerStep = 23),
+        onOpenConversation: (conv) {
+          setState(() {
+            _buyerStep = 23;
+          });
+        },
       );
     }
 

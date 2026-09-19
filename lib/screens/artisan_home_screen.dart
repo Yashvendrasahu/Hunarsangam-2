@@ -19,6 +19,9 @@ import 'order_details_screen.dart';
 import 'order_request_screen.dart';
 import 'artisan_collective_screen.dart';
 import 'suggested_collaborators_screen.dart';
+import 'artisan_buyer_chat_screen.dart';
+import 'conversations_list_screen.dart';
+import '../services/chat_service.dart';
 
 /// Primary Artisan Home Dashboard matching 'Artisan Home section.png'
 /// Provides real-time order tracking, AI voice assistant, product management,
@@ -681,7 +684,86 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
                   ],
                 ),
               ),
-              const SizedBox(width: 10.0),
+              const SizedBox(width: 8.0),
+
+              // Chat Hub / Conversations with Unread Indicator
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _activeSubScreen = ConversationsListScreen(
+                      userRole: 'artisan',
+                      currentUserName: widget.state?.artisanName ?? 'Ramu Kumar',
+                      onBack: () => setState(() => _activeSubScreen = null),
+                      onOpenConversation: (conv) {
+                        setState(() {
+                          _activeSubScreen = ArtisanBuyerChatScreen(
+                            conversationId: conv.id,
+                            buyerName: conv.buyerName,
+                            orderId: conv.orderNumber,
+                            orderTitle: conv.orderTitle,
+                            escrowAmount: conv.escrowAmount,
+                            deliveryDate: conv.deliveryDate,
+                            onBack: () => setState(() => _activeSubScreen = null),
+                            onEscrowTap: () {
+                              setState(() {
+                                _activeSubScreen = OrderDetailsScreen(
+                                  orderId: conv.orderNumber,
+                                  onBack: () => setState(() => _activeSubScreen = null),
+                                );
+                              });
+                            },
+                          );
+                        });
+                      },
+                    );
+                  });
+                },
+                borderRadius: BorderRadius.circular(20.0),
+                child: StreamBuilder<int>(
+                  stream: ChatService().unreadCountStream,
+                  builder: (context, snap) {
+                    final unread = snap.data ?? 0;
+                    return Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFAF2EC),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFE5D5CB)),
+                          ),
+                          child: const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            size: 19.0,
+                            color: Color(0xFF8C3A16),
+                          ),
+                        ),
+                        if (unread > 0)
+                          Positioned(
+                            top: 4.0,
+                            right: 4.0,
+                            child: Container(
+                              padding: const EdgeInsets.all(2.5),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF8C3A16),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '$unread',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 8.0),
 
               // User Avatar with green dot
               GestureDetector(
@@ -1100,6 +1182,19 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
                         totalQuantity: _bambooBasketTotal,
                         initialCompleted: _bambooBasketProgress,
                         onBack: () => setState(() => _activeSubScreen = null),
+                        onChatWithBuyer: () {
+                          setState(() {
+                            _activeSubScreen = ArtisanBuyerChatScreen(
+                              conversationId: 'conv-heritage-ramu-1048',
+                              buyerName: 'FabIndia Sourcing Hub',
+                              orderId: 'HS1048',
+                              orderTitle: '50 pcs Bamboo Baskets',
+                              escrowAmount: '₹22,500',
+                              deliveryDate: '28 Oct 2026',
+                              onBack: () => setState(() => _activeSubScreen = null),
+                            );
+                          });
+                        },
                         onNavigateTab: (idx) => setState(() {
                           _activeSubScreen = null;
                           _currentNavIndex = idx;

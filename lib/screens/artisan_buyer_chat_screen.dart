@@ -3,12 +3,15 @@
 // Artisan vs Bulk Buyer Chat with Escrow Sync, Vernacular Auto-Translation & Production Verification
 
 import 'package:flutter/material.dart';
+import '../models/chat_models.dart';
+import '../services/chat_service.dart';
 
 class ArtisanBuyerChatScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final VoidCallback? onViewOrderSpecs;
   final VoidCallback? onEscrowTap;
   final VoidCallback? onCameraTap;
+  final String conversationId;
   final String buyerName;
   final String orderId;
   final String orderTitle;
@@ -21,6 +24,7 @@ class ArtisanBuyerChatScreen extends StatefulWidget {
     this.onViewOrderSpecs,
     this.onEscrowTap,
     this.onCameraTap,
+    this.conversationId = 'conv-heritage-ramu-1048',
     this.buyerName = 'Heritage Handcrafts (Buyer)',
     this.orderId = 'REQ-HH-1048',
     this.orderTitle = '50 pcs Cane Baskets',
@@ -35,14 +39,75 @@ class ArtisanBuyerChatScreen extends StatefulWidget {
 class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ChatService _chatService = ChatService();
   
   bool _isMicPressed = false;
   bool _isBuyerAudioPlaying = false;
   bool _isArtisanVoicePlaying = false;
   bool _isBuyerSecondAudioPlaying = false;
+  bool _isLoadingGeminiSuggestions = false;
   String _activeTranslationMode = 'हिंदी / En';
 
-  final List<Map<String, dynamic>> _customMessages = [];
+  List<ChatMessage> _messages = [];
+  List<ChatAiSuggestion> _geminiSuggestions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMessages();
+    _loadGeminiSuggestions();
+
+    // Listen to live realtime stream for this conversation
+    _chatService.getMessagesStream(widget.conversationId).listen((list) {
+      if (mounted) {
+        setState(() {
+          _messages = list;
+        });
+        _scrollToBottom();
+      }
+    });
+
+    _textController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  Future<void> _loadMessages() async {
+    final msgs = await _chatService.fetchMessages(widget.conversationId, userRole: 'artisan');
+    if (mounted) {
+      setState(() {
+        _messages = msgs;
+      });
+      _scrollToBottom();
+    }
+  }
+
+  Future<void> _loadGeminiSuggestions() async {
+    setState(() => _isLoadingGeminiSuggestions = true);
+    final lastBuyerMsg = _messages.lastWhere(
+      (m) => m.isBuyer,
+      orElse: () => const ChatMessage(
+        id: '',
+        conversationId: '',
+        senderType: 'buyer',
+        senderName: 'Heritage Handcrafts',
+        content: 'Can you confirm if all 50 pieces will have the natural lacquer waterproof finish?',
+      ),
+    );
+
+    final suggestions = await _chatService.getAiSuggestions(
+      lastBuyerMessage: lastBuyerMsg.content,
+      craftType: 'Bamboo & Cane Weaving',
+      orderContext: '${widget.orderTitle}, escrow locked ${widget.escrowAmount}',
+    );
+
+    if (mounted) {
+      setState(() {
+        _geminiSuggestions = suggestions;
+        _isLoadingGeminiSuggestions = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -51,22 +116,25 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
     super.dispose();
   }
 
-  void _sendMessage(String text, {String? translation}) {
-    if (text.trim().isEmpty) return;
-    setState(() {
-      _customMessages.add({
-        'text': text.trim(),
-        'time': 'Just now',
-        'isUser': true,
-        'translated': translation ?? 'Auto-translated to English for Heritage Handcrafts',
-      });
-    });
+  void _sendMessage(String text, {String? translation}) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+
     _textController.clear();
+    await _chatService.sendMessage(
+      conversationId: widget.conversationId,
+      senderType: 'artisan',
+      senderName: 'Ramu Kumar',
+      senderId: '22222222-2222-2222-2222-222222222222',
+      content: trimmed,
+      translatedContent: translation,
+      orderId: widget.orderId,
+    );
     _scrollToBottom();
   }
 
   void _scrollToBottom() {
-    Future.delayed(const Duration(milliseconds: 100), () {
+    Future.delayed(const Duration(milliseconds: 150), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -121,62 +189,71 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                 _buildEscrowLockedBanner(),
                 const SizedBox(height: 14),
 
-                // Message 1: Buyer English Query + Hindi Translation Card
-                _buildBuyerMessageWithTranslation(
-                  time: '10:05 AM',
-                  originalEnglish:
-                      'Hello Ramu ji, we saw your catalog sample of the Woven Bamboo Baskets. Can you confirm if all 50 pieces will have the natural lacquer waterproof finish?',
-                  hindiTranslation:
-                      'नमस्ते रामू जी, हमने आपके बांस की टोकरियों का कैटलॉग सैंपल देखा। क्या आप पुष्टि कर सकते हैं कि सभी 50 पीस में प्राकृतिक लैकर वाटरप्रूफ फिनिश होगी?',
-                  isPlaying: _isBuyerAudioPlaying,
-                  onToggleAudio: () {
-                    setState(() {
-                      _isBuyerAudioPlaying = !_isBuyerAudioPlaying;
-                    });
-                  },
-                ),
-                const SizedBox(height: 14),
-
-                // Message 2: Artisan Voice Note (Hindi) + English Auto-Transcript
-                _buildArtisanVoiceNoteBubble(
-                  time: '10:12 AM',
-                  duration: '0:18',
-                  hindiTranscript:
-                      'हाँ सर, बिल्कुल! हम असम के ऑर्गेनिक बीजों के तेल और हर्बल लैकर से ही कोटिंग करेंगे। 100% वाटरप्रूफ और एक्सपोर्ट क्वालिटी रहेगा।',
-                  englishForBuyer:
-                      'Yes sir, absolutely! We will coat using organic seed oil and herbal lacquer from Assam. 100% waterproof and export grade.',
-                  isPlaying: _isArtisanVoicePlaying,
-                  onTogglePlay: () {
-                    setState(() {
-                      _isArtisanVoicePlaying = !_isArtisanVoicePlaying;
-                    });
-                  },
-                ),
-                const SizedBox(height: 14),
-
-                // Message 3: Buyer Response + Hindi Translation
-                _buildBuyerMessageWithTranslation(
-                  time: '10:15 AM',
-                  originalEnglish:
-                      'Excellent! Please share a quick production photo once the first 15-20 baskets are woven so we can release Milestone 1 payment.',
-                  hindiTranslation:
-                      'बहुत बढ़िया! कृपया पहले 15-20 टोकरियां बनने पर एक प्रोडक्शन फोटो साझा करें ताकि हम माइलस्टोन 1 का भुगतान जारी कर सकें।',
-                  isPlaying: _isBuyerSecondAudioPlaying,
-                  onToggleAudio: () {
-                    setState(() {
-                      _isBuyerSecondAudioPlaying = !_isBuyerSecondAudioPlaying;
-                    });
-                  },
-                ),
-                const SizedBox(height: 14),
-
-                // Dynamic user sent messages
-                ..._customMessages.map((msg) => _buildCustomMessageBubble(msg)),
+                // Dynamic messages loaded from Supabase
+                if (_messages.isEmpty) ...[
+                  // Seed initial message if waiting for sync
+                  _buildBuyerMessageWithTranslation(
+                    time: '10:05 AM',
+                    originalEnglish:
+                        'Hello Ramu ji, we saw your catalog sample of the Woven Bamboo Baskets. Can you confirm if all 50 pieces will have the natural lacquer waterproof finish?',
+                    hindiTranslation:
+                        'नमस्ते रामू जी, हमने आपके बांस की टोकरियों का कैटलॉग सैंपल देखा। क्या आप पुष्टि कर सकते हैं कि सभी 50 पीस में प्राकृतिक लैकर वाटरप्रूफ फिनिश होगी?',
+                    isPlaying: _isBuyerAudioPlaying,
+                    onToggleAudio: () {
+                      setState(() {
+                        _isBuyerAudioPlaying = !_isBuyerAudioPlaying;
+                      });
+                    },
+                  ),
+                ] else ...[
+                  ..._messages.map((msg) {
+                    if (msg.isBuyer) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _buildBuyerMessageWithTranslation(
+                          time: msg.time,
+                          originalEnglish: msg.content,
+                          hindiTranslation: msg.translatedContent ?? msg.content,
+                          isPlaying: false,
+                          onToggleAudio: () {},
+                        ),
+                      );
+                    } else {
+                      // Artisan Message
+                      if (msg.messageType == 'audio') {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _buildArtisanVoiceNoteBubble(
+                            time: msg.time,
+                            duration: msg.audioDuration ?? '0:18',
+                            hindiTranscript: msg.content,
+                            englishForBuyer: msg.translatedContent ?? msg.content,
+                            isPlaying: _isArtisanVoicePlaying,
+                            onTogglePlay: () {
+                              setState(() {
+                                _isArtisanVoicePlaying = !_isArtisanVoicePlaying;
+                              });
+                            },
+                          ),
+                        );
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _buildCustomMessageBubble({
+                          'text': msg.content,
+                          'translated': msg.translatedContent ?? 'Auto-translated to English for ${widget.buyerName}',
+                          'time': msg.time,
+                          'isUser': true,
+                        }),
+                      );
+                    }
+                  }),
+                ],
               ],
             ),
           ),
 
-          // Quick Suggestion Chips
+          // Quick Suggestion Chips (Powered by Gemini AI)
           _buildQuickActionChips(),
 
           // Bottom Input & Voice Recording Bar
@@ -871,12 +948,112 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
   }
 
   Widget _buildQuickActionChips() {
-    final chips = [
+    final List<Widget> chipWidgets = [];
+
+    // AI Suggestions from Gemini
+    if (_isLoadingGeminiSuggestions) {
+      chipWidgets.add(
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF8C3A16)),
+              ),
+              SizedBox(width: 6),
+              Text(
+                'Gemini generating suggestions...',
+                style: TextStyle(fontSize: 10, color: Color(0xFF8C3A16), fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      for (final s in _geminiSuggestions) {
+        chipWidgets.add(
+          ActionChip(
+            backgroundColor: const Color(0xFFFFF3E0),
+            side: const BorderSide(color: Color(0xFFFFCC80)),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+            avatar: const Text('✨', style: TextStyle(fontSize: 12)),
+            label: Text(
+              s.label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF8C3A16),
+              ),
+            ),
+            tooltip: 'Tap to review & edit with Gemini',
+            onPressed: () {
+              // Populates editable text field - NEVER automatically sent
+              setState(() {
+                _textController.text = s.textHindi;
+                _textController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _textController.text.length),
+                );
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('✨ Loaded suggestion: "${s.label}". You can edit before sending.'),
+                  duration: const Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+          ),
+        );
+      }
+    }
+
+    // Default quick action chips
+    final defaultChips = [
       {'icon': '📸', 'text': 'Share Production Photo'},
       {'icon': '✓', 'text': 'Confirm Lacquer Finish'},
       {'icon': '📦', 'text': 'Milestone 1 Ready'},
       {'icon': '🤝', 'text': 'Request Escrow Release'},
     ];
+
+    for (final item in defaultChips) {
+      chipWidgets.add(
+        ActionChip(
+          backgroundColor: const Color(0xFFF9EFE7),
+          side: const BorderSide(color: Color(0xFFEADBCE)),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+          avatar: Text(item['icon']!, style: const TextStyle(fontSize: 12)),
+          label: Text(
+            item['text']!,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1F1612),
+            ),
+          ),
+          onPressed: () {
+            if (item['text'] == 'Request Escrow Release') {
+              if (widget.onEscrowTap != null) {
+                widget.onEscrowTap!();
+              } else {
+                setState(() {
+                  _textController.text = 'Namaste, we have finished Milestone 1 (20 units). Requesting escrow release.';
+                });
+              }
+            } else {
+              setState(() {
+                _textController.text = item['text']!;
+                _textController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _textController.text.length),
+                );
+              });
+            }
+          },
+        ),
+      );
+    }
 
     return Container(
       height: 38,
@@ -884,33 +1061,16 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
       color: const Color(0xFFFDFBF9),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: chips.length,
+        itemCount: chipWidgets.length,
         separatorBuilder: (_, __) => const SizedBox(width: 6),
-        itemBuilder: (context, index) {
-          final item = chips[index];
-          return ActionChip(
-            backgroundColor: const Color(0xFFF9EFE7),
-            side: const BorderSide(color: Color(0xFFEADBCE)),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-            avatar: Text(item['icon']!, style: const TextStyle(fontSize: 12)),
-            label: Text(
-              item['text']!,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1F1612),
-              ),
-            ),
-            onPressed: () {
-              _sendMessage(item['text']!);
-            },
-          );
-        },
+        itemBuilder: (context, index) => chipWidgets[index],
       ),
     );
   }
 
   Widget _buildBottomInputBar(BuildContext context) {
+    final bool hasText = _textController.text.trim().isNotEmpty;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       decoration: const BoxDecoration(
@@ -991,26 +1151,41 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
               ),
               const SizedBox(width: 6),
 
-              // Mic / Send Button
-              GestureDetector(
-                onTapDown: (_) => setState(() => _isMicPressed = true),
-                onTapUp: (_) {
-                  setState(() => _isMicPressed = false);
-                  _sendMessage(
-                    '🎤 [Voice Note: 0:12s - "Ji bilkul, kal tak photo bhej denge"]',
-                    translation: 'Transcribed & Translated: "Yes definitely, will send photos by tomorrow."',
-                  );
-                },
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: _isMicPressed ? Colors.red : const Color(0xFF8C3A16),
-                    shape: BoxShape.circle,
+              // Send or Mic Button
+              if (hasText) ...[
+                GestureDetector(
+                  onTap: () => _sendMessage(_textController.text),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF8C3A16),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.send, color: Colors.white, size: 18),
                   ),
-                  child: const Icon(Icons.mic, color: Colors.white, size: 20),
                 ),
-              ),
+              ] else ...[
+                GestureDetector(
+                  onTapDown: (_) => setState(() => _isMicPressed = true),
+                  onTapUp: (_) {
+                    setState(() => _isMicPressed = false);
+                    _sendMessage(
+                      'Ji bilkul, kal tak 10 pieces ki photo bhej denge.',
+                      translation: 'Yes definitely, will send photos of the 10 pieces by tomorrow.',
+                    );
+                  },
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: _isMicPressed ? Colors.red : const Color(0xFF8C3A16),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.mic, color: Colors.white, size: 20),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 4),

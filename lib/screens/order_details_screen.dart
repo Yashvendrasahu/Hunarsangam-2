@@ -14,12 +14,14 @@ class OrderDetailsScreen extends StatefulWidget {
   final String buyerName;
   final int totalQuantity;
   final int initialCompleted;
+  final VoidCallback? onChatWithBuyer;
 
   const OrderDetailsScreen({
     super.key,
     this.onBack,
     this.onNavigateTab,
     this.onFindArtisan,
+    this.onChatWithBuyer,
     this.orderId = 'HS1048',
     this.buyerName = "Priya's Home Décor",
     this.totalQuantity = 50,
@@ -381,6 +383,37 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
               ],
             ),
           ),
+          // Chat with Buyer Button
+          if (widget.onChatWithBuyer != null) ...[
+            InkWell(
+              onTap: widget.onChatWithBuyer,
+              borderRadius: BorderRadius.circular(20.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.0),
+                  color: const Color(0xFFFBECE2),
+                  border: Border.all(color: const Color(0xFFF0D5C3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF8C3A16), size: 16.0),
+                    SizedBox(width: 4.0),
+                    Text(
+                      'Chat',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF8C3A16),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8.0),
+          ],
           // Notification Bell
           Container(
             width: 38.0,

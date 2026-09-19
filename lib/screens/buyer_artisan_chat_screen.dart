@@ -3,6 +3,8 @@
 // Real-time Bilingual Chat between Bulk Buyer & Master Artisan with Live Voice Translation, Trust Escrow, and Photo Proofs
 
 import 'package:flutter/material.dart';
+import '../models/chat_models.dart';
+import '../services/chat_service.dart';
 
 class BuyerArtisanChatScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -12,6 +14,9 @@ class BuyerArtisanChatScreen extends StatefulWidget {
   final VoidCallback? onSendPhoto;
   final VoidCallback? onViewReceipt;
   final VoidCallback? onDownloadReceipt;
+  final VoidCallback? onOpenConversations;
+  final String conversationId;
+  final String artisanName;
 
   const BuyerArtisanChatScreen({
     super.key,
@@ -22,6 +27,9 @@ class BuyerArtisanChatScreen extends StatefulWidget {
     this.onSendPhoto,
     this.onViewReceipt,
     this.onDownloadReceipt,
+    this.onOpenConversations,
+    this.conversationId = 'conv-heritage-ramu-1048',
+    this.artisanName = 'Ramesh Kumar',
   });
 
   @override
@@ -30,11 +38,153 @@ class BuyerArtisanChatScreen extends StatefulWidget {
 
 class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
   final TextEditingController _textController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final ChatService _chatService = ChatService();
   bool _isPlayingVoice = false;
+  List<ChatMessage> _messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMessages();
+
+    _chatService.getMessagesStream(widget.conversationId).listen((list) {
+      if (mounted) {
+        setState(() {
+          _messages = list;
+        });
+        _scrollToBottom();
+      }
+    });
+
+    _textController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  Future<void> _loadMessages() async {
+    final msgs = await _chatService.fetchMessages(widget.conversationId, userRole: 'buyer');
+    if (mounted) {
+      setState(() {
+        _messages = msgs;
+      });
+      _scrollToBottom();
+    }
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _sendMessage(String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+
+    _textController.clear();
+    await _chatService.sendMessage(
+      conversationId: widget.conversationId,
+      senderType: 'buyer',
+      senderName: 'Heritage Handcrafts',
+      senderId: '11111111-1111-1111-1111-111111111111',
+      content: trimmed,
+      orderId: 'REQ-HH-1048',
+    );
+    _scrollToBottom();
+  }
+
+  void _handlePaymentAction() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBECE2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.shield_outlined, color: Color(0xFF9C3C18), size: 24),
+                ),
+                const SizedBox(width: 12),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'HunarSangam Trust Escrow',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFF1F1612)),
+                    ),
+                    Text(
+                      'Milestone 1 • Order #HS1048',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF7A6A60)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFCF9F6),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFEADBCE)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Escrow Amount to Release:', style: TextStyle(fontSize: 13, color: Color(0xFF7A6A60))),
+                  Text('₹22,500', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF065F46))),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF9C3C18),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  if (widget.onViewOrder != null) {
+                    widget.onViewOrder!();
+                  }
+                },
+                child: const Text('View Order & Release Milestone Funds', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
     _textController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -135,6 +285,12 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
               ],
             ),
           ),
+          if (widget.onOpenConversations != null)
+            IconButton(
+              icon: const Icon(Icons.forum_outlined, color: textDark, size: 20),
+              tooltip: 'All Discussions',
+              onPressed: widget.onOpenConversations,
+            ),
           IconButton(
             icon: const Icon(Icons.more_vert, color: textDark),
             onPressed: () {},
@@ -146,6 +302,7 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
           // Chat Stream Messages
           Expanded(
             child: ListView(
+              controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               children: [
                 // 1. Timestamp Pill
@@ -632,6 +789,59 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 14),
+
+                // Dynamic messages loaded from Supabase
+                ..._messages.skip(2).map((msg) {
+                  final isMe = msg.isBuyer;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Align(
+                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+                        decoration: BoxDecoration(
+                          color: isMe ? primaryRust : Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: isMe ? null : Border.all(color: const Color(0xFFEADBCE)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              msg.content,
+                              style: TextStyle(
+                                color: isMe ? Colors.white : textDark,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (msg.translatedContent != null && msg.translatedContent!.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                '🌐 ${msg.translatedContent}',
+                                style: TextStyle(
+                                  color: isMe ? const Color(0xFFFFD4C2) : primaryRust,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 2),
+                            Text(
+                              msg.time,
+                              style: TextStyle(
+                                color: isMe ? Colors.white70 : textMuted,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
                 const SizedBox(height: 16),
               ],
             ),
@@ -713,13 +923,15 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
                                   isDense: true,
                                   contentPadding: EdgeInsets.zero,
                                 ),
+                                onSubmitted: (val) => _sendMessage(val),
                               ),
                             ),
                             IconButton(
                               icon: const Icon(Icons.currency_rupee, size: 16, color: primaryRust),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
-                              onPressed: () {},
+                              tooltip: 'Trust Escrow & Payment',
+                              onPressed: _handlePaymentAction,
                             ),
                             const SizedBox(width: 6),
                             IconButton(
@@ -741,8 +953,18 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.mic, color: Colors.white, size: 20),
-                        onPressed: () {},
+                        icon: Icon(
+                          _textController.text.trim().isNotEmpty ? Icons.send : Icons.mic,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          if (_textController.text.trim().isNotEmpty) {
+                            _sendMessage(_textController.text);
+                          } else {
+                            _sendMessage('Hello, could you share an update on the lot?');
+                          }
+                        },
                       ),
                     ),
                   ],
