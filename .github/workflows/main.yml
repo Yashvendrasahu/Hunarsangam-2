@@ -33,6 +33,12 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Analyze Dart code
+        run: flutter analyze
+
+      - name: Run Flutter tests
+        run: flutter test
+
       - name: Build Release APK
         run: |
           flutter build apk --release \
@@ -61,11 +67,14 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Analyze Dart code
+        run: flutter analyze
+
       - name: Build Flutter Web
         run: |
           flutter build web --release --base-href "/Hunarsangam-2/" \
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
-            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
             --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
 
       - name: Setup GitHub Pages
