@@ -1,9 +1,8 @@
-name: Build Android APK & Web
+name: Build Android APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -11,72 +10,24 @@ permissions:
 
 jobs:
   build-apk:
-    name: Build Android Release APK
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Java JDK
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
-      - name: Setup Flutter SDK
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
 
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Analyze Dart code
-        run: flutter analyze
-
-      - name: Run Flutter tests
-        run: flutter test
-
-      - name: Build Release APK
-        run: |
-          flutter build apk --release \
-            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
-            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
-            --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
         with:
           name: hunarsangam-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-
-  build-web:
-    name: Build Flutter Web
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter SDK
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Analyze Dart code
-        run: flutter analyze
-
-      - name: Build Flutter Web
-        run: |
-          flutter build web --release \
-            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
-            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
-            --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
-
-      - name: Upload Web Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: hunarsangam-web
-          path: build/web
