@@ -130,7 +130,7 @@ class _BuyerSearchResultsScreenState extends State<BuyerSearchResultsScreen> {
             padding: const EdgeInsets.all(2),
             child: ClipOval(
               child: Image.asset(
-                'Logo.png',
+                'assets/images/logo.png',
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => const Icon(Icons.storefront, size: 16, color: _primaryRust),
               ),

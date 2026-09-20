@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../widgets/buyer_bottom_nav_bar.dart';
+import '../services/hardware_service.dart';
 
 class BuyerSearchScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -25,6 +26,7 @@ class BuyerSearchScreen extends StatefulWidget {
 
 class _BuyerSearchScreenState extends State<BuyerSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  bool _isListening = false;
 
   final List<String> _trending = [
     'Handmade Bamboo Baskets',
@@ -35,12 +37,57 @@ class _BuyerSearchScreenState extends State<BuyerSearchScreen> {
     'Chanderi Silk Stoles',
   ];
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   void _triggerSearch(String query) {
     if (widget.onSelectQuery != null) {
       widget.onSelectQuery!(query);
     } else if (widget.onSearch != null) {
       widget.onSearch!(query);
     }
+  }
+
+  Future<void> _handleVoiceSearch() async {
+    if (_isListening) {
+      await HardwareService().stopListening();
+      if (mounted) setState(() => _isListening = false);
+      return;
+    }
+
+    setState(() => _isListening = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🎙️ Listening... Speak your craft search query now'),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFFA84318),
+      ),
+    );
+
+    await HardwareService().startListening(
+      onResult: (text, isFinal) {
+        if (text.isNotEmpty) {
+          _searchController.text = text;
+          if (isFinal) {
+            if (mounted) setState(() => _isListening = false);
+            _triggerSearch(text);
+          }
+        }
+      },
+      onStopped: () {
+        if (mounted) setState(() => _isListening = false);
+      },
+      onError: (err) {
+        if (mounted) {
+          setState(() => _isListening = false);
+          // Fallback to default search query
+          widget.onVoiceSearch();
+        }
+      },
+    );
   }
 
   @override
@@ -68,8 +115,12 @@ class _BuyerSearchScreenState extends State<BuyerSearchScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.mic, color: Color(0xFFA84318)),
-            onPressed: widget.onVoiceSearch,
+            icon: Icon(
+              _isListening ? Icons.mic : Icons.mic_none,
+              color: _isListening ? Colors.red : const Color(0xFFA84318),
+            ),
+            tooltip: 'Voice Search',
+            onPressed: _handleVoiceSearch,
           ),
         ],
       ),

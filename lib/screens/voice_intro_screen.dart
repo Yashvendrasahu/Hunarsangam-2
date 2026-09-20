@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/onboarding_state.dart';
 import '../widgets/onboarding_header.dart';
 import '../widgets/action_button.dart';
+import '../services/hardware_service.dart';
 
 class VoiceIntroScreen extends StatefulWidget {
   final OnboardingState state;
@@ -24,34 +25,92 @@ class VoiceIntroScreen extends StatefulWidget {
 }
 
 class _VoiceIntroScreenState extends State<VoiceIntroScreen> with SingleTickerProviderStateMixin {
-  late bool _isRecording;
+  bool _isListening = false;
+  bool _isPlayingAudio = false;
+  String _transcribedStory = '';
   late AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
-    _isRecording = widget.state.hasRecordedVoice;
+    _transcribedStory = widget.state.voiceStoryTranscript;
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    HardwareService().stopListening();
+    HardwareService().stopSpeaking();
     super.dispose();
   }
 
-  void _toggleRecording() {
+  Future<void> _toggleRecording() async {
+    if (_isListening) {
+      await HardwareService().stopListening();
+      if (mounted) setState(() => _isListening = false);
+      return;
+    }
+
     setState(() {
-      _isRecording = !_isRecording;
+      _isListening = true;
     });
-    widget.onStateChanged(
-      widget.state.copyWith(
-        hasRecordedVoice: _isRecording,
-        voiceDuration: '0:18',
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🎙️ Microphone active! Speak in Hindi, English, or your local language.'),
+        backgroundColor: Color(0xFFBA4B1D),
+        duration: Duration(seconds: 2),
       ),
+    );
+
+    await HardwareService().startListening(
+      onResult: (text, isFinal) {
+        if (text.isNotEmpty && mounted) {
+          setState(() {
+            _transcribedStory = text;
+          });
+          widget.onStateChanged(
+            widget.state.copyWith(
+              hasRecordedVoice: true,
+              voiceStoryTranscript: text,
+              voiceDuration: '0:24',
+            ),
+          );
+          if (isFinal) {
+            setState(() => _isListening = false);
+          }
+        }
+      },
+      onStopped: () {
+        if (mounted) setState(() => _isListening = false);
+      },
+      onError: (err) {
+        if (mounted) setState(() => _isListening = false);
+      },
+    );
+  }
+
+  Future<void> _playVoiceSample() async {
+    final textToPlay = _transcribedStory.isNotEmpty
+        ? _transcribedStory
+        : 'नमस्ते! मैं रामू कुमार हूँ। मैं बाराबंकी में पिछले 15 वर्षों से हस्तनिर्मित बाँस की टोकरियाँ और कलाकृतियाँ बनाता हूँ।';
+
+    if (_isPlayingAudio) {
+      await HardwareService().stopSpeaking();
+      if (mounted) setState(() => _isPlayingAudio = false);
+      return;
+    }
+
+    setState(() => _isPlayingAudio = true);
+    await HardwareService().speak(
+      textToPlay,
+      onComplete: () {
+        if (mounted) setState(() => _isPlayingAudio = false);
+      },
     );
   }
 
@@ -136,7 +195,7 @@ class _VoiceIntroScreenState extends State<VoiceIntroScreen> with SingleTickerPr
                       child: AnimatedBuilder(
                         animation: _pulseController,
                         builder: (context, child) {
-                          final pulse = _isRecording ? _pulseController.value * 12.0 : 0.0;
+                          final pulse = _isListening ? _pulseController.value * 16.0 : 0.0;
                           return Stack(
                             alignment: Alignment.center,
                             children: [
@@ -146,7 +205,7 @@ class _VoiceIntroScreenState extends State<VoiceIntroScreen> with SingleTickerPr
                                 height: 190.0 + pulse,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: const Color(0xFFD85A2A).withValues(alpha: 0.12),
+                                  color: (_isListening ? Colors.red : const Color(0xFFD85A2A)).withValues(alpha: 0.12),
                                 ),
                               ),
                               // Middle Ring
@@ -155,22 +214,24 @@ class _VoiceIntroScreenState extends State<VoiceIntroScreen> with SingleTickerPr
                                 height: 155.0,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: const Color(0xFFD85A2A).withValues(alpha: 0.22),
+                                  color: (_isListening ? Colors.red : const Color(0xFFD85A2A)).withValues(alpha: 0.22),
                                 ),
                               ),
                               // Core Mic Button
                               Container(
                                 width: 120.0,
                                 height: 120.0,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   gradient: RadialGradient(
-                                    colors: [
-                                      Color(0xFFBA4B1D),
-                                      Color(0xFF8C3814),
-                                    ],
+                                    colors: _isListening
+                                        ? [Colors.redAccent, Colors.red.shade900]
+                                        : [
+                                            const Color(0xFFBA4B1D),
+                                            const Color(0xFF8C3814),
+                                          ],
                                   ),
-                                  boxShadow: [
+                                  boxShadow: const [
                                     BoxShadow(
                                       color: Color(0x338C3814),
                                       blurRadius: 16.0,
@@ -179,7 +240,7 @@ class _VoiceIntroScreenState extends State<VoiceIntroScreen> with SingleTickerPr
                                   ],
                                 ),
                                 child: Icon(
-                                  _isRecording ? Icons.mic : Icons.mic_none_rounded,
+                                  _isListening ? Icons.stop_rounded : Icons.mic_rounded,
                                   size: 48.0,
                                   color: Colors.white,
                                 ),
@@ -195,15 +256,19 @@ class _VoiceIntroScreenState extends State<VoiceIntroScreen> with SingleTickerPr
                     // Tap to speak instruction
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.graphic_eq_rounded, size: 16.0, color: Color(0xFFA84318)),
-                        SizedBox(width: 6.0),
+                      children: [
+                        Icon(
+                          _isListening ? Icons.graphic_eq_rounded : Icons.mic_none_rounded,
+                          size: 16.0,
+                          color: _isListening ? Colors.red : const Color(0xFFA84318),
+                        ),
+                        const SizedBox(width: 6.0),
                         Text(
-                          'Tap the microphone and speak naturally.',
+                          _isListening ? 'Listening now... Speak your story' : 'Tap the microphone and speak naturally.',
                           style: TextStyle(
                             fontSize: 14.0,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFFA84318),
+                            color: _isListening ? Colors.red : const Color(0xFFA84318),
                           ),
                         ),
                       ],
@@ -216,6 +281,48 @@ class _VoiceIntroScreenState extends State<VoiceIntroScreen> with SingleTickerPr
                         color: Color(0xFF7A685F),
                       ),
                     ),
+
+                    if (_transcribedStory.isNotEmpty) ...[
+                      const SizedBox(height: 14.0),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F8E9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFC8E6C9)),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.record_voice_over, color: Color(0xFF2E7D32), size: 16),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Voice Transcribed Successfully',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF2E7D32)),
+                                ),
+                                const Spacer(),
+                                IconButton(
+                                  icon: Icon(
+                                    _isPlayingAudio ? Icons.stop_circle : Icons.volume_up_rounded,
+                                    color: const Color(0xFF2E7D32),
+                                    size: 20,
+                                  ),
+                                  onPressed: _playVoiceSample,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '“$_transcribedStory”',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 12.5, fontStyle: FontStyle.italic, color: Color(0xFF1B5E20)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: 20.0),
 
@@ -280,12 +387,12 @@ class _VoiceIntroScreenState extends State<VoiceIntroScreen> with SingleTickerPr
 
                     const SizedBox(height: 20.0),
 
-                    // Secondary Action: Add Details Manually
+                    // Secondary Action: Test Voice Synthesis
                     ActionButton(
-                      text: 'Add Details Manually',
-                      icon: Icons.edit_note_rounded,
+                      text: _isPlayingAudio ? 'Stop Playing Audio' : 'Play Voice Audio Guide',
+                      icon: _isPlayingAudio ? Icons.stop_circle_outlined : Icons.play_circle_fill_rounded,
                       isOutlined: true,
-                      onPressed: () {},
+                      onPressed: _playVoiceSample,
                     ),
 
                     const SizedBox(height: 12.0),

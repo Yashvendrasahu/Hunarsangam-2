@@ -11,6 +11,7 @@ class ArtisanOrdersScreen extends StatefulWidget {
   final Function(String orderId, String buyerName, int totalQty, int completed)? onOrderTap;
   final VoidCallback? onOrderRequestTap;
   final VoidCallback? onCollaborateTap;
+  final Function(String buyerName, String orderTitle)? onChatWithBuyer;
 
   const ArtisanOrdersScreen({
     super.key,
@@ -19,6 +20,7 @@ class ArtisanOrdersScreen extends StatefulWidget {
     this.onOrderTap,
     this.onOrderRequestTap,
     this.onCollaborateTap,
+    this.onChatWithBuyer,
   });
 
   @override
@@ -64,30 +66,54 @@ class _ArtisanOrdersScreenState extends State<ArtisanOrdersScreen> {
                 return ChoiceChip(
                   label: Text(_filters[index]),
                   selected: isSelected,
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() => _selectedFilterIndex = index);
+                    }
+                  },
+                  labelStyle: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected ? Colors.white : const Color(0xFF6D4C41),
+                  ),
                   selectedColor: const Color(0xFFA84318),
                   backgroundColor: const Color(0xFFF5EBE1),
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : const Color(0xFF6B584E),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  onSelected: (_) => setState(() => _selectedFilterIndex = index),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 );
               },
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFEADBCE)),
+          const Divider(height: 1, color: Color(0xFFEADFD6)),
+
+          // Orders Stream
           Expanded(
-            child: FutureBuilder<List<OrderModel>>(
-              future: OrderService().getOrders(),
+            child: StreamBuilder<List<OrderModel>>(
+              stream: OrderService().getArtisanOrdersStream(widget.artisanName),
               builder: (context, snapshot) {
                 final orders = snapshot.data ?? [];
-                if (snapshot.connectionState == ConnectionState.waiting && orders.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
-                }
                 if (orders.isEmpty) {
-                  return const Center(child: Text('No active orders found.'));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.assignment_outlined, size: 48, color: Color(0xFFD7CCC8)),
+                        const SizedBox(height: 12),
+                        const Text('No orders found in this status', style: TextStyle(color: Color(0xFF8D6E63))),
+                        const SizedBox(height: 12),
+                        if (widget.onOrderRequestTap != null)
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFA84318),
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: widget.onOrderRequestTap,
+                            child: const Text('View Sample Order Request'),
+                          ),
+                      ],
+                    ),
+                  );
                 }
+
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: orders.length,
@@ -152,7 +178,7 @@ class _ArtisanOrdersScreenState extends State<ArtisanOrdersScreen> {
                               minHeight: 6,
                               borderRadius: BorderRadius.circular(3),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -160,7 +186,23 @@ class _ArtisanOrdersScreenState extends State<ArtisanOrdersScreen> {
                                   'Progress: ${order.unitsCompleted}/${order.unitsTotal} Units Made',
                                   style: const TextStyle(fontSize: 11, color: Color(0xFF8D6E63), fontWeight: FontWeight.w600),
                                 ),
-                                const Text('Tap for details →', style: TextStyle(fontSize: 11, color: Color(0xFFA84318), fontWeight: FontWeight.w700)),
+                                TextButton.icon(
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: const Size(50, 30),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 14, color: Color(0xFFA84318)),
+                                  label: const Text(
+                                    'Chat with Buyer',
+                                    style: TextStyle(fontSize: 11.5, color: Color(0xFFA84318), fontWeight: FontWeight.w800),
+                                  ),
+                                  onPressed: () {
+                                    if (widget.onChatWithBuyer != null) {
+                                      widget.onChatWithBuyer!(order.buyerName, 'Order #${order.orderNumber}');
+                                    }
+                                  },
+                                ),
                               ],
                             ),
                           ],

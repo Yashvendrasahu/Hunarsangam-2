@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../models/chat_models.dart';
 import '../services/chat_service.dart';
+import '../services/hardware_service.dart';
 
 class ArtisanBuyerChatScreen extends StatefulWidget {
   final String conversationId;
@@ -34,11 +35,21 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
   final TextEditingController _msgController = TextEditingController();
   final ChatService _chatService = ChatService();
   List<ChatMessage> _messages = [];
+  bool _isListening = false;
+  String? _currentlySpeakingMsgId;
 
   @override
   void initState() {
     super.initState();
     _loadMessages();
+
+    _chatService.getMessagesStream(widget.conversationId).listen((list) {
+      if (mounted) {
+        setState(() {
+          _messages = list;
+        });
+      }
+    });
   }
 
   void _loadMessages() async {
@@ -64,6 +75,82 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
       orderId: widget.orderId,
     );
     _loadMessages();
+  }
+
+  Future<void> _handleCameraCapture() async {
+    final photo = await HardwareService().captureImageFromCamera();
+    if (photo != null) {
+      await _chatService.sendMessage(
+        conversationId: widget.conversationId,
+        senderType: 'artisan',
+        senderName: 'Artisan Ramu',
+        senderId: 'artisan_1',
+        content: '📷 [Craft Proof Photo: ${photo.name}] Batch progress updated.',
+        orderId: widget.orderId,
+      );
+      _loadMessages();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('📸 Craft photo sent to buyer!'),
+            backgroundColor: Color(0xFF2E7D32),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleMicVoiceInput() async {
+    if (_isListening) {
+      await HardwareService().stopListening();
+      if (mounted) setState(() => _isListening = false);
+      return;
+    }
+
+    setState(() => _isListening = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🎙️ Boliyee... Recording in Hindi / Regional language'),
+        backgroundColor: Color(0xFFA84318),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    await HardwareService().startListening(
+      language: 'hi_IN',
+      onResult: (text, isFinal) {
+        if (text.isNotEmpty) {
+          _msgController.text = text;
+          if (isFinal) {
+            if (mounted) setState(() => _isListening = false);
+            _sendTextMessage();
+          }
+        }
+      },
+      onStopped: () {
+        if (mounted) setState(() => _isListening = false);
+      },
+      onError: (err) {
+        if (mounted) setState(() => _isListening = false);
+      },
+    );
+  }
+
+  void _speakMessage(ChatMessage msg) {
+    if (_currentlySpeakingMsgId == msg.id) {
+      HardwareService().stopAudio();
+      setState(() => _currentlySpeakingMsgId = null);
+      return;
+    }
+
+    setState(() => _currentlySpeakingMsgId = msg.id);
+    HardwareService().speakText(
+      msg.translatedContent ?? msg.content,
+      language: 'Hindi',
+      onDone: () {
+        if (mounted) setState(() => _currentlySpeakingMsgId = null);
+      },
+    );
   }
 
   @override
@@ -109,24 +196,24 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                       style: const TextStyle(color: Color(0xFFA84318), fontSize: 11.5, fontWeight: FontWeight.w700),
                     ),
                   ),
-                  const Icon(Icons.chevron_right, color: Color(0xFFA84318), size: 18),
                 ],
               ),
             ),
           ),
+          // Chat Messages List
           Expanded(
-            child: ListView.separated(
+            child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: _messages.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                final isMe = msg.senderType == 'artisan';
+              itemBuilder: (ctx, idx) {
+                final msg = _messages[idx];
+                final isMe = msg.isMe;
 
                 return Align(
                   alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
                     constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
                     decoration: BoxDecoration(
                       color: isMe ? const Color(0xFFA84318) : Colors.white,
@@ -136,16 +223,34 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          msg.content,
-                          style: TextStyle(
-                            color: isMe ? Colors.white : const Color(0xFF2D2421),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                msg.content,
+                                style: TextStyle(
+                                  color: isMe ? Colors.white : const Color(0xFF2D2421),
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                _currentlySpeakingMsgId == msg.id ? Icons.stop_circle : Icons.volume_up_outlined,
+                                size: 16,
+                                color: isMe ? Colors.white70 : const Color(0xFFA84318),
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Listen aloud',
+                              onPressed: () => _speakMessage(msg),
+                            ),
+                          ],
                         ),
-                        if (msg.translatedContent != null) ...[
-                          const SizedBox(height: 4),
+                        if (msg.translatedContent != null && msg.translatedContent!.isNotEmpty) ...[
+                          const SizedBox(height: 6),
                           Text(
                             '🌐 ${msg.translatedContent}',
                             style: TextStyle(
@@ -169,11 +274,17 @@ class _ArtisanBuyerChatScreenState extends State<ArtisanBuyerChatScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.mic, color: Color(0xFFA84318)),
-                    onPressed: () {
-                      _msgController.text = 'नमस्ते! बांस की टोकरियों का काम प्रगति पर है।';
-                      _sendTextMessage();
-                    },
+                    icon: Icon(
+                      _isListening ? Icons.mic : Icons.mic_none,
+                      color: _isListening ? Colors.red : const Color(0xFFA84318),
+                    ),
+                    tooltip: 'Speak in voice',
+                    onPressed: _handleMicVoiceInput,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.camera_alt_outlined, color: Color(0xFF7A6A60)),
+                    tooltip: 'Take Photo of Craft',
+                    onPressed: _handleCameraCapture,
                   ),
                   Expanded(
                     child: TextField(

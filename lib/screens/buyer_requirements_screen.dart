@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../widgets/buyer_bottom_nav_bar.dart';
+import '../widgets/brand_logo_card.dart';
 
 class BuyerRequirementsScreen extends StatelessWidget {
   final VoidCallback onBackToHome;
@@ -30,7 +31,13 @@ class BuyerRequirementsScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF2D2421)),
           onPressed: onBackToHome,
         ),
-        title: const Text('Bulk Sourcing Requirements', style: TextStyle(color: Color(0xFF2D2421), fontSize: 16, fontWeight: FontWeight.w800)),
+        title: Row(
+          children: const [
+            HunarSangamLogoBadge(size: 26.0),
+            SizedBox(width: 8.0),
+            Text('Bulk Requirements', style: TextStyle(color: Color(0xFF2D2421), fontSize: 16, fontWeight: FontWeight.w800)),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

@@ -21,6 +21,11 @@ dependencies:
   url_launcher: ^6.3.0
   path_provider: ^2.1.4
   http: ^1.2.2
+  flutter_sound: ^9.30.0
+  audioplayers: ^6.8.1
+  flutter_tts: ^4.2.5
+  speech_to_text: ^7.5.0
+  permission_handler: ^13.0.2
 
 dev_dependencies:
   flutter_test:

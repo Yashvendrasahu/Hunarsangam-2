@@ -119,7 +119,7 @@ class _BuyerDiscoverScreenState extends State<BuyerDiscoverScreen> {
             padding: const EdgeInsets.all(2),
             child: ClipOval(
               child: Image.asset(
-                'Logo.png',
+                'assets/images/logo.png',
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => const Icon(Icons.storefront, size: 18, color: _primaryRust),
               ),

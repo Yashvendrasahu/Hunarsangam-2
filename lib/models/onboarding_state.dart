@@ -17,6 +17,7 @@ class OnboardingState {
   final List<String> selectedCraftIds;
   final String selectedCraft;
   final String voiceTranscript;
+  String get voiceStoryTranscript => voiceTranscript;
   final String voiceDuration;
   final bool hasRecordedVoice;
   final bool hasProfilePhoto;
@@ -58,6 +59,7 @@ class OnboardingState {
     List<String>? selectedCraftIds,
     String? selectedCraft,
     String? voiceTranscript,
+    String? voiceStoryTranscript,
     String? voiceDuration,
     bool? hasRecordedVoice,
     bool? hasProfilePhoto,
@@ -77,7 +79,7 @@ class OnboardingState {
       artisanLocation: artisanLocation ?? this.artisanLocation,
       selectedCraftIds: selectedCraftIds ?? this.selectedCraftIds,
       selectedCraft: selectedCraft ?? this.selectedCraft,
-      voiceTranscript: voiceTranscript ?? this.voiceTranscript,
+      voiceTranscript: voiceStoryTranscript ?? voiceTranscript ?? this.voiceTranscript,
       voiceDuration: voiceDuration ?? this.voiceDuration,
       hasRecordedVoice: hasRecordedVoice ?? this.hasRecordedVoice,
       hasProfilePhoto: hasProfilePhoto ?? this.hasProfilePhoto,

@@ -3,6 +3,7 @@
 // Incoming B2B Bulk Order Request Review & Acceptance Hub for Artisans
 
 import 'package:flutter/material.dart';
+import '../services/hardware_service.dart';
 
 /// Production-ready Flutter screen matching 'o3 - order requset - reject page.png'
 /// Order Request from Heritage Handcrafts Pvt. Ltd. (50 × Bamboo Handwoven Basket)
@@ -12,6 +13,7 @@ class OrderRequestScreen extends StatefulWidget {
   final VoidCallback? onDecline;
   final VoidCallback? onFindArtisan;
   final VoidCallback? onOpenSpecs;
+  final VoidCallback? onChatWithBuyer;
   final Function(int)? onNavigateTab;
   final String buyerName;
   final String productName;
@@ -26,6 +28,7 @@ class OrderRequestScreen extends StatefulWidget {
     this.onDecline,
     this.onFindArtisan,
     this.onOpenSpecs,
+    this.onChatWithBuyer,
     this.onNavigateTab,
     this.buyerName = 'Heritage Handcrafts Pvt. Ltd.',
     this.productName = 'Bamboo Handwoven Basket',
@@ -47,20 +50,20 @@ class _OrderRequestScreenState extends State<OrderRequestScreen> {
   int get _capacityGap => (widget.totalQuantity - widget.myCapacity).clamp(0, widget.totalQuantity);
   double get _capacityRatio => (widget.myCapacity / widget.totalQuantity).clamp(0.0, 1.0);
 
-  void _toggleAudio() {
-    setState(() {
-      _isPlayingAudio = !_isPlayingAudio;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isPlayingAudio
-              ? '▶ Playing audio summary in $_selectedLanguage'
-              : '⏸ Audio summary paused',
-        ),
-        duration: const Duration(seconds: 2),
-        backgroundColor: const Color(0xFF8C3A16),
-      ),
+  Future<void> _toggleAudio() async {
+    if (_isPlayingAudio) {
+      await HardwareService().stopSpeaking();
+      if (mounted) setState(() => _isPlayingAudio = false);
+      return;
+    }
+
+    setState(() => _isPlayingAudio = true);
+    final script = 'नमस्ते! हेरिटेज हैंडक्राफ्ट्स नई दिल्ली से 50 बांस की टोकरियों का थोक ऑर्डर मिला है। कुल मूल्य बाइस हजार पांच सौ रुपये एस्क्रो में सुरक्षित है।';
+    await HardwareService().speak(
+      script,
+      onComplete: () {
+        if (mounted) setState(() => _isPlayingAudio = false);
+      },
     );
   }
 
@@ -601,6 +604,37 @@ class _OrderRequestScreenState extends State<OrderRequestScreen> {
                 ],
               ),
             ],
+          ),
+          const SizedBox(height: 12.0),
+          // Direct Chat with Buyer CTA Button
+          SizedBox(
+            width: double.infinity,
+            height: 42.0,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                if (widget.onChatWithBuyer != null) {
+                  widget.onChatWithBuyer!();
+                } else if (widget.onNavigateTab != null) {
+                  widget.onNavigateTab!(3);
+                }
+              },
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18.0, color: Color(0xFF8C3A16)),
+              label: const Text(
+                'Chat with Buyer / खरीदार से बात करें',
+                style: TextStyle(
+                  fontSize: 13.0,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF8C3A16),
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF8C3A16), width: 1.5),
+                backgroundColor: const Color(0xFFFAF5F0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+            ),
           ),
         ],
       ),

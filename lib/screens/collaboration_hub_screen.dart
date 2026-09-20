@@ -10,6 +10,7 @@ class CollaborationHubScreen extends StatelessWidget {
   final ValueChanged<int>? onNavigateTab;
   final VoidCallback? onOpenFormCollective;
   final VoidCallback? onOpenSuggestedArtisans;
+  final Function(String buyerName, String title)? onChatWithBuyer;
 
   const CollaborationHubScreen({
     super.key,
@@ -18,6 +19,7 @@ class CollaborationHubScreen extends StatelessWidget {
     this.onNavigateTab,
     this.onOpenFormCollective,
     this.onOpenSuggestedArtisans,
+    this.onChatWithBuyer,
   });
 
   @override
@@ -171,7 +173,24 @@ class CollaborationHubScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(quantityNeeded, style: const TextStyle(fontSize: 12, color: Color(0xFF7A685F))),
           const SizedBox(height: 8),
-          Text(payout, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Color(0xFF2E7D32))),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(payout, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Color(0xFF2E7D32))),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFA84318),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.chat_bubble_outline, size: 14),
+                label: const Text('Chat with Buyer', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                onPressed: () => onChatWithBuyer?.call(buyer, title),
+              ),
+            ],
+          ),
         ],
       ),
     );

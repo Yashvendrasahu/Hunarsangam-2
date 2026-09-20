@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import '../models/chat_models.dart';
 import '../services/chat_service.dart';
+import '../services/hardware_service.dart';
 
 class BuyerArtisanChatScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -41,6 +42,7 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final ChatService _chatService = ChatService();
   bool _isPlayingVoice = false;
+  bool _isListeningMic = false;
   List<ChatMessage> _messages = [];
 
   @override
@@ -60,6 +62,86 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
     _textController.addListener(() {
       setState(() {});
     });
+  }
+
+  Future<void> _handleMicVoiceInput() async {
+    if (_isListeningMic) {
+      await HardwareService().stopListening();
+      if (mounted) setState(() => _isListeningMic = false);
+      return;
+    }
+
+    setState(() => _isListeningMic = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🎙️ Recording voice note... Speak your message'),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF9C3C18),
+      ),
+    );
+
+    await HardwareService().startListening(
+      onResult: (text, isFinal) {
+        if (text.isNotEmpty) {
+          _textController.text = text;
+          if (isFinal) {
+            if (mounted) setState(() => _isListeningMic = false);
+            _sendMessage(text);
+          }
+        }
+      },
+      onStopped: () {
+        if (mounted) setState(() => _isListeningMic = false);
+      },
+      onError: (err) {
+        if (mounted) setState(() => _isListeningMic = false);
+      },
+    );
+  }
+
+  Future<void> _handleCameraCapture() async {
+    final photo = await HardwareService().captureImageFromCamera();
+    if (photo != null) {
+      await _chatService.sendMessage(
+        conversationId: widget.conversationId,
+        senderType: 'buyer',
+        senderName: 'Heritage Handcrafts',
+        senderId: '11111111-1111-1111-1111-111111111111',
+        content: '📷 [Photo Attached: ${photo.name}] Reference sample image shared.',
+        orderId: 'REQ-HH-1048',
+      );
+      _scrollToBottom();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('📸 Photo sent to artisan!'),
+            backgroundColor: Color(0xFF2E7D32),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handlePlayVoiceNote(String text) async {
+    if (_isPlayingVoice) {
+      await HardwareService().stopAudio();
+      if (mounted) setState(() => _isPlayingVoice = false);
+      return;
+    }
+
+    setState(() => _isPlayingVoice = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🔊 Playing audio speech...'),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF9C3C18),
+      ),
+    );
+
+    await HardwareService().speakText(text);
+    if (mounted) {
+      setState(() => _isPlayingVoice = false);
+    }
   }
 
   Future<void> _loadMessages() async {
@@ -426,7 +508,20 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
                         Row(
                           children: [
                             GestureDetector(
-                              onTap: () => setState(() => _isPlayingVoice = !_isPlayingVoice),
+                              onTap: () {
+                                setState(() => _isPlayingVoice = !_isPlayingVoice);
+                                if (_isPlayingVoice) {
+                                  HardwareService().speakText(
+                                    'Namaste, I have started the bamboo processing. Could you confirm the double rim design?',
+                                    language: 'English',
+                                    onDone: () {
+                                      if (mounted) setState(() => _isPlayingVoice = false);
+                                    },
+                                  );
+                                } else {
+                                  HardwareService().stopAudio();
+                                }
+                              },
                               child: Container(
                                 width: 36,
                                 height: 36,
@@ -491,15 +586,20 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
                                       ),
                                     ],
                                   ),
-                                  Row(
-                                    children: const [
-                                      Icon(Icons.volume_up_outlined, size: 13, color: primaryRust),
-                                      SizedBox(width: 2),
-                                      Text(
-                                        'Listen',
-                                        style: TextStyle(color: primaryRust, fontSize: 10.5, fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
+                                  InkWell(
+                                    onTap: () => _handlePlayVoiceNote(
+                                      'Namaste, I have started the bamboo processing. Could you confirm the double rim design?',
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(_isPlayingVoice ? Icons.stop_circle_outlined : Icons.volume_up_outlined, size: 14, color: primaryRust),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          _isPlayingVoice ? 'Stop' : 'Listen',
+                                          style: const TextStyle(color: primaryRust, fontSize: 10.5, fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -819,13 +919,31 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
                             ),
                             if (msg.translatedContent != null && msg.translatedContent!.isNotEmpty) ...[
                               const SizedBox(height: 4),
-                              Text(
-                                '🌐 ${msg.translatedContent}',
-                                style: TextStyle(
-                                  color: isMe ? const Color(0xFFFFD4C2) : primaryRust,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '🌐 ${msg.translatedContent}',
+                                      style: TextStyle(
+                                        color: isMe ? const Color(0xFFFFD4C2) : primaryRust,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () => _handlePlayVoiceNote(msg.translatedContent ?? msg.content),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 4),
+                                      child: Icon(
+                                        Icons.volume_up_outlined,
+                                        size: 13,
+                                        color: isMe ? Colors.white70 : primaryRust,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                             const SizedBox(height: 2),
@@ -938,7 +1056,8 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
                               icon: const Icon(Icons.camera_alt_outlined, size: 17, color: textMuted),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
-                              onPressed: () {},
+                              tooltip: 'Take Photo with Camera',
+                              onPressed: _handleCameraCapture,
                             ),
                           ],
                         ),
@@ -948,13 +1067,15 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
                     Container(
                       width: 42,
                       height: 42,
-                      decoration: const BoxDecoration(
-                        color: primaryRust,
+                      decoration: BoxDecoration(
+                        color: _isListeningMic ? Colors.red : primaryRust,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
                         icon: Icon(
-                          _textController.text.trim().isNotEmpty ? Icons.send : Icons.mic,
+                          _textController.text.trim().isNotEmpty
+                              ? Icons.send
+                              : (_isListeningMic ? Icons.mic_off : Icons.mic),
                           color: Colors.white,
                           size: 20,
                         ),
@@ -962,7 +1083,7 @@ class _BuyerArtisanChatScreenState extends State<BuyerArtisanChatScreen> {
                           if (_textController.text.trim().isNotEmpty) {
                             _sendMessage(_textController.text);
                           } else {
-                            _sendMessage('Hello, could you share an update on the lot?');
+                            _handleMicVoiceInput();
                           }
                         },
                       ),

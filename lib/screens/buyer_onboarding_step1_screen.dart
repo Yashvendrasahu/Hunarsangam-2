@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import '../models/buyer_onboarding_model.dart';
+import '../services/hardware_service.dart';
+import '../widgets/brand_logo_card.dart';
 
 /// Screen: Bulk Buyer Registration - Step 1 of 3: Basic Details
 /// Exactly matches 'bulk buyer setp 1 register.png'
@@ -203,28 +205,34 @@ class _BuyerOnboardingStep1ScreenState
   }
 
   Widget _buildOnboardingBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
-        border: Border.all(color: const Color(0xFFC8E6C9)),
-        borderRadius: BorderRadius.circular(20.0),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.check_circle_rounded, color: Color(0xFF2E7D32), size: 14),
-          SizedBox(width: 5.0),
-          Text(
-            'Bulk Buyer Onboarding',
-            style: TextStyle(
-              color: Color(0xFF2E7D32),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const HunarSangamLogoBadge(size: 32.0, showText: true),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            border: Border.all(color: const Color(0xFFC8E6C9)),
+            borderRadius: BorderRadius.circular(20.0),
           ),
-        ],
-      ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.check_circle_rounded, color: Color(0xFF2E7D32), size: 14),
+              SizedBox(width: 5.0),
+              Text(
+                'Bulk Buyer Onboarding',
+                style: TextStyle(
+                  color: Color(0xFF2E7D32),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -476,16 +484,44 @@ class _BuyerOnboardingStep1ScreenState
         Row(
           children: [
             Expanded(
-              child: _buildDashedUploadBox(
-                icon: Icons.upload_file_outlined,
-                label: 'upload logo here',
+              child: InkWell(
+                onTap: () async {
+                  final img = await HardwareService().captureImageFromCamera();
+                  if (img != null && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('📷 Logo captured: ${img.name}!'),
+                        backgroundColor: const Color(0xFF2E7D32),
+                      ),
+                    );
+                  }
+                },
+                borderRadius: BorderRadius.circular(16.0),
+                child: _buildDashedUploadBox(
+                  icon: Icons.camera_alt_outlined,
+                  label: 'Camera logo',
+                ),
               ),
             ),
             const SizedBox(width: 10.0),
             Expanded(
-              child: _buildDashedUploadBox(
-                icon: Icons.folder_open_outlined,
-                label: 'Browse here',
+              child: InkWell(
+                onTap: () async {
+                  final img = await HardwareService().pickImageFromGallery();
+                  if (img != null && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('🖼️ Logo selected: ${img.name}!'),
+                        backgroundColor: const Color(0xFF2E7D32),
+                      ),
+                    );
+                  }
+                },
+                borderRadius: BorderRadius.circular(16.0),
+                child: _buildDashedUploadBox(
+                  icon: Icons.folder_open_outlined,
+                  label: 'Browse gallery',
+                ),
               ),
             ),
           ],

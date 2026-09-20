@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../models/buyer_onboarding_model.dart';
 import '../widgets/buyer_bottom_nav_bar.dart';
+import '../widgets/brand_logo_card.dart';
 
 class BuyerHomeScreen extends StatelessWidget {
   final BuyerOnboardingModel? model;
@@ -46,17 +47,23 @@ class BuyerHomeScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
                     children: [
-                      Text(
-                        'Welcome, ${activeModel.businessName.isNotEmpty ? activeModel.businessName : "FabIndia"}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF2D2421)),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'Direct-from-Cluster Sourcing Network',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF7A685F)),
+                      const HunarSangamLogoBadge(size: 40.0),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome, ${activeModel.businessName.isNotEmpty ? activeModel.businessName : "FabIndia"}',
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF2D2421)),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Direct-from-Cluster Sourcing Network',
+                            style: TextStyle(fontSize: 11.5, color: Color(0xFF7A685F)),
+                          ),
+                        ],
                       ),
                     ],
                   ),

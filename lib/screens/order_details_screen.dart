@@ -3,6 +3,7 @@
 // Order Details & Production Progress Updation Hub for Artisans
 
 import 'package:flutter/material.dart';
+import '../services/hardware_service.dart';
 
 /// Production-ready Flutter screen matching 'o2- order updation page.png'
 /// Order #HS1048 - Handmade Bamboo Baskets
@@ -63,6 +64,23 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     setState(() {
       _isPlayingAudio = !_isPlayingAudio;
     });
+
+    if (_isPlayingAudio) {
+      final text = _selectedLanguage == 'Hindi'
+          ? 'नमस्ते कारीगर साथी। यह ऑर्डर नंबर ${widget.orderId} है। कुल मात्रा ${widget.totalQuantity} पीस है। कृपया दैनिक उत्पादन अपडेट करें।'
+          : 'Welcome artisan. This is order number ${widget.orderId} for ${widget.buyerName}. Total quantity is ${widget.totalQuantity} pieces. Please update your production progress on time.';
+
+      HardwareService().speakText(
+        text,
+        language: _selectedLanguage,
+        onDone: () {
+          if (mounted) setState(() => _isPlayingAudio = false);
+        },
+      );
+    } else {
+      HardwareService().stopAudio();
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -735,23 +753,27 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildDetailTile(
-                  icon: Icons.storefront,
-                  label: 'BUYER',
-                  title: widget.buyerName,
-                  subtitleWidget: Row(
-                    children: const [
-                      Icon(Icons.check_circle, size: 11.0, color: Color(0xFF2E7D32)),
-                      SizedBox(width: 3.0),
-                      Text(
-                        'Verified B2B Buyer',
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2E7D32),
+                child: InkWell(
+                  onTap: widget.onChatWithBuyer,
+                  borderRadius: BorderRadius.circular(14.0),
+                  child: _buildDetailTile(
+                    icon: Icons.storefront,
+                    label: 'BUYER (TAP TO CHAT)',
+                    title: widget.buyerName,
+                    subtitleWidget: Row(
+                      children: const [
+                        Icon(Icons.chat_bubble_outline, size: 11.0, color: Color(0xFF8C3A16)),
+                        SizedBox(width: 3.0),
+                        Text(
+                          'Chat with Buyer →',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF8C3A16),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1233,6 +1255,75 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 12.0),
+
+          // Real Camera Proof Capture Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14.0),
+              border: Border.all(color: const Color(0xFFEADFD6)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF5EE),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: const Icon(Icons.camera_alt, color: Color(0xFF8C3A16), size: 20.0),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Upload Production Proof',
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Color(0xFF1F1612)),
+                      ),
+                      Text(
+                        'Take real camera photo of finished pieces for buyer escrow release',
+                        style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6A60)),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Open Camera',
+                  icon: const Icon(Icons.photo_camera, color: Color(0xFF8C3A16)),
+                  onPressed: () async {
+                    final photo = await HardwareService().captureImageFromCamera();
+                    if (photo != null && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('📸 Photo captured: ${photo.name}! Proof uploaded to Buyer Escrow.'),
+                          backgroundColor: const Color(0xFF2E7D32),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                IconButton(
+                  tooltip: 'Choose from Gallery',
+                  icon: const Icon(Icons.photo_library, color: Color(0xFF7A6A60)),
+                  onPressed: () async {
+                    final img = await HardwareService().pickImageFromGallery();
+                    if (img != null && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('🖼️ Image selected: ${img.name}! Attached to milestone.'),
+                          backgroundColor: const Color(0xFF2E7D32),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1363,26 +1454,54 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Update Progress CTA
-          SizedBox(
-            width: double.infinity,
-            height: 48.0,
-            child: ElevatedButton.icon(
-              onPressed: _saveProgress,
-              icon: const Icon(Icons.check_circle_outline, size: 18.0),
-              label: const Text(
-                'Update Progress',
-                style: TextStyle(fontSize: 13.0, fontWeight: FontWeight.w800),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF8C3A16),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14.0),
+          // Action CTAs: Chat with Buyer & Update Progress
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: SizedBox(
+                  height: 48.0,
+                  child: OutlinedButton.icon(
+                    onPressed: widget.onChatWithBuyer,
+                    icon: const Icon(Icons.chat_bubble_outline, size: 18.0),
+                    label: const Text(
+                      'Chat with Buyer',
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF8C3A16),
+                      side: const BorderSide(color: Color(0xFF8C3A16), width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.0),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 8.0),
+              Expanded(
+                flex: 3,
+                child: SizedBox(
+                  height: 48.0,
+                  child: ElevatedButton.icon(
+                    onPressed: _saveProgress,
+                    icon: const Icon(Icons.check_circle_outline, size: 18.0),
+                    label: const Text(
+                      'Update Progress',
+                      style: TextStyle(fontSize: 13.0, fontWeight: FontWeight.w800),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8C3A16),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.0),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8.0),
 

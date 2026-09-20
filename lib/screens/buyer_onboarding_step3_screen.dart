@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../models/buyer_onboarding_model.dart';
+import '../widgets/brand_logo_card.dart';
 
 /// Screen: Bulk Buyer Registration - Step 3 of 3: Review your profile
 /// Exactly matches 'bulk buyer step 3 register.png'
@@ -115,6 +116,13 @@ class BuyerOnboardingStep3Screen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            HunarSangamLogoBadge(size: 32.0, showText: true),
+          ],
+        ),
+        SizedBox(height: 10.0),
         Text(
           'Review your profile',
           style: TextStyle(

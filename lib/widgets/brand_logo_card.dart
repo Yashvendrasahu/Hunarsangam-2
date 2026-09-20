@@ -22,11 +22,18 @@ class BrandLogoCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Center(
-        child: Icon(
-          Icons.handyman_rounded,
-          size: size * 0.52,
-          color: Colors.white,
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
+        'assets/images/logo.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Center(
+          child: Icon(
+            Icons.handyman_rounded,
+            size: size * 0.52,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -55,11 +62,18 @@ class HunarSangamLogoBadge extends StatelessWidget {
             color: const Color(0xFFA84318),
             borderRadius: BorderRadius.circular(size * 0.28),
           ),
-          child: Center(
-            child: Icon(
-              Icons.handyman_rounded,
-              size: size * 0.55,
-              color: Colors.white,
+          clipBehavior: Clip.antiAlias,
+          child: Image.asset(
+            'assets/images/logo.png',
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => Center(
+              child: Icon(
+                Icons.handyman_rounded,
+                size: size * 0.55,
+                color: Colors.white,
+              ),
             ),
           ),
         ),

@@ -364,6 +364,15 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
               totalQuantity: totalQty,
               initialCompleted: completed,
               onBack: () => setState(() => _activeSubScreen = null),
+              onChatWithBuyer: () => setState(() {
+                _activeSubScreen = ArtisanBuyerChatScreen(
+                  conversationId: 'conv_$orderId',
+                  buyerName: buyerName,
+                  orderId: orderId,
+                  orderTitle: 'Handcrafted Bamboo Fruit Baskets ($totalQty pcs)',
+                  onBack: () => setState(() => _activeSubScreen = null),
+                );
+              }),
               onNavigateTab: (idx) => setState(() {
                 _activeSubScreen = null;
                 _currentNavIndex = idx;
@@ -402,7 +411,21 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
         onOrderRequestTap: () {
           setState(() {
             _activeSubScreen = OrderRequestScreen(
+              buyerName: 'Heritage Handcrafts Pvt. Ltd.',
+              productName: 'Bamboo Handwoven Basket',
+              totalQuantity: 50,
+              unitPrice: 450,
+              myCapacity: 30,
               onBack: () => setState(() => _activeSubScreen = null),
+              onChatWithBuyer: () => setState(() {
+                _activeSubScreen = ArtisanBuyerChatScreen(
+                  conversationId: 'conv_heritage_handcrafts',
+                  buyerName: 'Heritage Handcrafts Pvt. Ltd.',
+                  orderId: 'REQ_50_BAMBOO',
+                  orderTitle: 'Bamboo Handwoven Basket (50 pcs)',
+                  onBack: () => setState(() => _activeSubScreen = null),
+                );
+              }),
               onNavigateTab: (idx) => setState(() {
                 _activeSubScreen = null;
                 _currentNavIndex = idx;
@@ -422,6 +445,16 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
         onCollaborateTap: () {
           setState(() {
             _currentNavIndex = 3;
+          });
+        },
+        onChatWithBuyer: (buyerName, orderTitle) {
+          setState(() {
+            _activeSubScreen = ArtisanBuyerChatScreen(
+              conversationId: 'conv_${buyerName.replaceAll(" ", "_").toLowerCase()}',
+              buyerName: buyerName,
+              orderTitle: orderTitle,
+              onBack: () => setState(() => _activeSubScreen = null),
+            );
           });
         },
       );
@@ -448,6 +481,14 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
               _activeSubScreen = null;
               _currentNavIndex = idx;
             }),
+          );
+        }),
+        onChatWithBuyer: (buyerName, title) => setState(() {
+          _activeSubScreen = ArtisanBuyerChatScreen(
+            conversationId: 'conv_${buyerName.replaceAll(" ", "_").toLowerCase()}',
+            buyerName: buyerName,
+            orderTitle: title,
+            onBack: () => setState(() => _activeSubScreen = null),
           );
         }),
       );

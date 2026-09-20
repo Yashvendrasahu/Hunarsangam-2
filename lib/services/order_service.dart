@@ -16,6 +16,11 @@ class OrderService {
   final _ordersStreamController = StreamController<List<OrderModel>>.broadcast();
   Stream<List<OrderModel>> get ordersStream => _ordersStreamController.stream;
 
+  Stream<List<OrderModel>> getArtisanOrdersStream([String? artisanName]) async* {
+    yield List.unmodifiable(_orders);
+    yield* _ordersStreamController.stream;
+  }
+
   final _requestsStreamController = StreamController<List<OrderRequestModel>>.broadcast();
   Stream<List<OrderRequestModel>> get requestsStream => _requestsStreamController.stream;
 

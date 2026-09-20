@@ -1,11 +1,14 @@
 // lib/screens/profile_photo_screen.dart
 
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/onboarding_state.dart';
 import '../widgets/onboarding_header.dart';
 import '../widgets/action_button.dart';
+import '../services/hardware_service.dart';
 
-class ProfilePhotoScreen extends StatelessWidget {
+class ProfilePhotoScreen extends StatefulWidget {
   final OnboardingState state;
   final ValueChanged<OnboardingState> onStateChanged;
   final VoidCallback onBack;
@@ -20,10 +23,52 @@ class ProfilePhotoScreen extends StatelessWidget {
   });
 
   @override
+  State<ProfilePhotoScreen> createState() => _ProfilePhotoScreenState();
+}
+
+class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
+  String? _localPhotoPath;
+
+  Future<void> _takePhotoWithCamera() async {
+    final photo = await HardwareService().captureImageFromCamera();
+    if (photo != null && mounted) {
+      setState(() => _localPhotoPath = photo.path);
+      widget.onStateChanged(widget.state.copyWith(profilePhotoUrl: photo.path));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('📸 Workshop photo captured successfully!'),
+          backgroundColor: Color(0xFF2E7D32),
+        ),
+      );
+    }
+  }
+
+  Future<void> _chooseFromGallery() async {
+    final photo = await HardwareService().pickImageFromGallery();
+    if (photo != null && mounted) {
+      setState(() => _localPhotoPath = photo.path);
+      widget.onStateChanged(widget.state.copyWith(profilePhotoUrl: photo.path));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🖼️ Profile photo selected from gallery!'),
+          backgroundColor: Color(0xFF2E7D32),
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final photoUrl = state.profilePhotoUrl.isNotEmpty
-        ? state.profilePhotoUrl
+    final defaultUrl = widget.state.profilePhotoUrl.isNotEmpty
+        ? widget.state.profilePhotoUrl
         : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80';
+
+    ImageProvider photoProvider;
+    if (_localPhotoPath != null && !kIsWeb) {
+      photoProvider = FileImage(File(_localPhotoPath!));
+    } else {
+      photoProvider = NetworkImage(defaultUrl);
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFFDFBF9),
@@ -38,20 +83,20 @@ class ProfilePhotoScreen extends StatelessWidget {
                 totalSteps: 7,
                 title: 'Add Your Workshop Photo',
                 subtitle: 'Buyers love seeing the authentic master artisan behind the handcrafted creations',
-                onBack: onBack,
+                onBack: widget.onBack,
               ),
               const Spacer(),
               Center(
                 child: Stack(
                   children: [
                     Container(
-                      width: 140,
-                      height: 140,
+                      width: 150,
+                      height: 150,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFA84318), width: 3),
+                        border: Border.all(color: const Color(0xFFA84318), width: 3.5),
                         image: DecorationImage(
-                          image: NetworkImage(photoUrl),
+                          image: photoProvider,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -59,28 +104,61 @@ class ProfilePhotoScreen extends StatelessWidget {
                     Positioned(
                       bottom: 0,
                       right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFA84318),
-                          shape: BoxShape.circle,
+                      child: InkWell(
+                        onTap: _takePhotoWithCamera,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFA84318),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3)),
+                            ],
+                          ),
+                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 22),
                         ),
-                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.photo_camera, size: 16),
+                      label: const Text('Camera'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFA84318),
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: _takePhotoWithCamera,
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.photo_library, size: 16),
+                      label: const Text('Gallery'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFA84318),
+                        side: const BorderSide(color: Color(0xFFA84318)),
+                      ),
+                      onPressed: _chooseFromGallery,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
               Center(
                 child: Text(
-                  state.artisanName.isNotEmpty ? state.artisanName : 'Ramu Kumar',
+                  widget.state.artisanName.isNotEmpty ? widget.state.artisanName : 'Ramu Kumar',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF2D2421)),
                 ),
               ),
               Center(
                 child: Text(
-                  state.selectedCraft.isNotEmpty ? state.selectedCraft : 'Master Bamboo Artisan',
+                  widget.state.selectedCraft.isNotEmpty ? widget.state.selectedCraft : 'Master Bamboo Artisan',
                   style: const TextStyle(fontSize: 13, color: Color(0xFF7A685F)),
                 ),
               ),
@@ -88,8 +166,7 @@ class ProfilePhotoScreen extends StatelessWidget {
               ActionButton(
                 text: 'Continue / आगे बढ़ें',
                 onPressed: () {
-                  onStateChanged(state.copyWith(profilePhotoUrl: photoUrl));
-                  onContinue();
+                  widget.onContinue();
                 },
               ),
             ],

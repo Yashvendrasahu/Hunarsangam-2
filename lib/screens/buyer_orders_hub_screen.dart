@@ -3,6 +3,7 @@
 // Enterprise Buyer Portal - Orders & Production Management Hub
 
 import 'package:flutter/material.dart';
+import '../widgets/brand_logo_card.dart';
 
 class BuyerOrdersHubScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -49,13 +50,19 @@ class _BuyerOrdersHubScreenState extends State<BuyerOrdersHubScreen> {
           icon: const Icon(Icons.arrow_back, color: primaryRust),
           onPressed: widget.onBack ?? () => Navigator.of(context).maybePop(),
         ),
-        title: const Text(
-          'Orders & Production',
-          style: TextStyle(
-            color: primaryRust,
-            fontWeight: FontWeight.w900,
-            fontSize: 18,
-          ),
+        title: Row(
+          children: const [
+            HunarSangamLogoBadge(size: 26.0),
+            SizedBox(width: 8.0),
+            Text(
+              'Orders & Production',
+              style: TextStyle(
+                color: primaryRust,
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
