@@ -26,6 +26,7 @@ analyzer:
     unused_element: ignore
     prefer_final_fields: ignore
     unnecessary_const: ignore
+    avoid_web_libraries_in_flutter: ignore
 
 linter:
   rules:

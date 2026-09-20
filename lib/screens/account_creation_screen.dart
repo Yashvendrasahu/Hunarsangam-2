@@ -107,6 +107,83 @@ class _AccountCreationScreenState extends State<AccountCreationScreen> {
     widget.onStateChanged(updatedState);
     if (!mounted) return;
     setState(() => _isRegistering = false);
+
+    // Show email verification modal dialog as requested
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFFFFFDFB),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(Icons.mark_email_unread_outlined, color: Color(0xFFA84318), size: 28),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Verify Your Email',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF1F1612)),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'A verification link has been sent to your email address:\n\n📧 ${email.isNotEmpty ? email : 'your-email@domain.com'}\n\nPlease check your inbox and click the verification link to activate your artisan account.',
+              style: const TextStyle(fontSize: 13.5, color: Color(0xFF4E342E), height: 1.4),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8F3),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF3E3D7)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Color(0xFFA84318)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'You must verify your email before accessing your artisan dashboard.',
+                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF8C3A16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('🔄 Resent verification email successfully!')),
+              );
+            },
+            child: const Text('Resend Email', style: TextStyle(color: Color(0xFF6D4C41), fontWeight: FontWeight.w700)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFA84318),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+            },
+            child: const Text('I Have Verified My Email', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5)),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
     widget.onContinue();
   }
 

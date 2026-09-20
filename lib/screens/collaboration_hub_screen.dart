@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import '../models/onboarding_state.dart';
+import 'artisan_buyer_chat_screen.dart';
 
 /// Screen 27: Collaboration Hub
 /// 100% matching the UI design in 'colloboration.png'
@@ -824,7 +825,20 @@ class _CollaborationHubScreenState extends State<CollaborationHubScreen> {
                     ],
                   ),
                   ElevatedButton(
-                    onPressed: () => _showSnack('💬 Opening live collaboration chat with Ramesh Kumar...'),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ArtisanBuyerChatScreen(
+                            buyerName: 'Ramesh Kumar (Cluster Collaborator)',
+                            orderId: 'REQ-HH-8841',
+                            orderTitle: 'Bamboo Handwoven Basket (20 pcs share)',
+                            escrowAmount: '₹9,000',
+                            deliveryDate: '28 Sep',
+                          ),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _forestButton,
                       foregroundColor: Colors.white,

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../services/order_service.dart';
 import '../services/production_service.dart';
 import '../services/collaboration_service.dart';
+import 'artisan_buyer_chat_screen.dart';
 
 /// Screen representing the Artisan Orders Hub (matching 'o1- order first page.png')
 /// Includes 2x2 production metrics, cluster capacity alert, filter tabs,
@@ -980,6 +981,38 @@ class _ArtisanOrdersScreenState extends State<ArtisanOrdersScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8.0),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                backgroundColor: const Color(0xFFEFEBE9),
+                foregroundColor: const Color(0xFF4E342E),
+                side: const BorderSide(color: Color(0xFFD7CCC8)),
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ArtisanBuyerChatScreen(
+                      buyerName: 'FabIndia Retail Ltd. (Bulk Buyer)',
+                      orderId: 'PO-FAB-8821',
+                      orderTitle: '120 × Woven Bamboo Fruit Basket',
+                      escrowAmount: '₹54,000',
+                      deliveryDate: '28 Mar',
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.chat_bubble_outline, size: 16.0, color: Color(0xFF8C3A16)),
+              label: const Text(
+                '💬 Chat with Bulk Buyer (FabIndia)',
+                style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w800, color: Color(0xFF4E342E)),
+              ),
+            ),
           ),
         ],
       ),

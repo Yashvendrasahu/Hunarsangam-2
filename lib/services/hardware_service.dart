@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart';
 // Use universal_html or dart:html on web, graceful stubs for other platforms
 import 'dart:html' as html;
 import 'dart:js' as js;
-import 'dart:js' show allowInterop;
 
 class CapturedImage {
   final Uint8List bytes;
@@ -133,12 +132,12 @@ class HardwareService {
         _speechRecognition['lang'] = 'en-IN';
       }
 
-      _speechRecognition['onstart'] = allowInterop((event) {
+      _speechRecognition['onstart'] = (event) {
         debugPrint('[HardwareService] Speech recognition started');
         _isListening = true;
-      });
+      };
 
-      _speechRecognition['onresult'] = allowInterop((event) {
+      _speechRecognition['onresult'] = (event) {
         try {
           String interimTranscript = '';
           String finalTranscript = '';
@@ -165,9 +164,9 @@ class HardwareService {
         } catch (e) {
           debugPrint('[HardwareService] Error parsing speech result: $e');
         }
-      });
+      };
 
-      _speechRecognition['onerror'] = allowInterop((event) {
+      _speechRecognition['onerror'] = (event) {
         final error = event['error']?.toString() ?? 'Unknown speech recognition error';
         debugPrint('[HardwareService] Speech recognition error: $error');
         if (error == 'not-allowed') {
@@ -175,13 +174,13 @@ class HardwareService {
         } else if (error != 'no-speech') {
           _onErrorCallback?.call('Voice input notice: $error');
         }
-      });
+      };
 
-      _speechRecognition['onend'] = allowInterop((event) {
+      _speechRecognition['onend'] = (event) {
         debugPrint('[HardwareService] Speech recognition ended');
         _isListening = false;
         _onListeningStopped?.call();
-      });
+      };
 
       _speechRecognition.callMethod('start');
       _isListening = true;
