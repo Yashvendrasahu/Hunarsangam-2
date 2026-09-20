@@ -1,92 +1,79 @@
 // lib/models/buyer_onboarding_model.dart
 
-import 'package:flutter/foundation.dart';
-
 enum BusinessType {
-  retailer('Retailer', 'Stores & Boutiques'),
-  eventOrganizer('Event Organizer', 'Weddings & Gifting'),
-  corporateBuyer('Corporate Bulk Buyer', 'Gifting & Decor'),
-  shopOwner('Shop Owner', 'Local Outlets'),
-  institutional('Institutional', 'Hotels & Exports'),
-  other('Other', 'Custom Inquiries');
+  retailer('Retailer / Boutique', 'Curated physical retail shop'),
+  eventOrganizer('Event Organizer', 'Weddings, corporate & cultural events'),
+  corporateBuyer('Corporate Buyer', 'Gifting, hospitality & decor'),
+  shopOwner('Shop Owner / Distributor', 'Wholesale & distribution'),
+  institutional('Institutional / NGO', 'Govt, foundations & museums'),
+  other('Other Business', 'Custom sourcing requirements');
 
   final String title;
   final String subtitle;
+
   const BusinessType(this.title, this.subtitle);
 }
 
-class CraftCategoryItem {
-  final String id;
-  final String title;
-  final String badgeText;
-  final String imageUrl;
-
-  const CraftCategoryItem({
-    required this.id,
-    required this.title,
-    required this.badgeText,
-    required this.imageUrl,
-  });
-}
-
-@immutable
 class BuyerOnboardingModel {
+  final String buyerId;
   final String yourName;
   final String businessName;
   final String countryCode;
   final String phoneNumber;
-  final bool useWhatsAppNotifications;
   final String workEmail;
-  final bool hasLogo;
-  final String? logoPath;
+  final bool useWhatsAppNotifications;
   final BusinessType businessType;
+  final String? logoPath;
   final List<String> selectedCategories;
-  final String buyerId;
+  final String? volumeRequirement;
+  final String? customNote;
+  final bool isVerified;
 
   const BuyerOnboardingModel({
-    this.yourName = 'Vikram Malhotra',
-    this.businessName = 'FabCraft Living Pvt. Ltd.',
+    this.buyerId = 'BB-88392',
+    this.yourName = '',
+    this.businessName = '',
     this.countryCode = '+91',
-    this.phoneNumber = '98765 43210',
+    this.phoneNumber = '',
+    this.workEmail = '',
     this.useWhatsAppNotifications = true,
-    this.workEmail = 'procurement@fabcraft.in',
-    this.hasLogo = true,
-    this.logoPath,
     this.businessType = BusinessType.retailer,
-    this.selectedCategories = const [
-      'Home Decor',
-      'Bamboo Craft',
-      'Pottery',
-    ],
-    this.buyerId = '#BB-8492',
+    this.logoPath,
+    this.selectedCategories = const ['Pottery & Ceramics', 'Bamboo & Cane'],
+    this.volumeRequirement = '50-200 pcs / month',
+    this.customNote,
+    this.isVerified = true,
   });
 
   BuyerOnboardingModel copyWith({
+    String? buyerId,
     String? yourName,
     String? businessName,
     String? countryCode,
     String? phoneNumber,
-    bool? useWhatsAppNotifications,
     String? workEmail,
-    bool? hasLogo,
-    String? logoPath,
+    bool? useWhatsAppNotifications,
     BusinessType? businessType,
+    String? logoPath,
     List<String>? selectedCategories,
-    String? buyerId,
+    String? volumeRequirement,
+    String? customNote,
+    bool? isVerified,
   }) {
     return BuyerOnboardingModel(
+      buyerId: buyerId ?? this.buyerId,
       yourName: yourName ?? this.yourName,
       businessName: businessName ?? this.businessName,
       countryCode: countryCode ?? this.countryCode,
       phoneNumber: phoneNumber ?? this.phoneNumber,
-      useWhatsAppNotifications:
-          useWhatsAppNotifications ?? this.useWhatsAppNotifications,
       workEmail: workEmail ?? this.workEmail,
-      hasLogo: hasLogo ?? this.hasLogo,
-      logoPath: logoPath ?? this.logoPath,
+      useWhatsAppNotifications: useWhatsAppNotifications ?? this.useWhatsAppNotifications,
       businessType: businessType ?? this.businessType,
+      logoPath: logoPath ?? this.logoPath,
       selectedCategories: selectedCategories ?? this.selectedCategories,
-      buyerId: buyerId ?? this.buyerId,
+      volumeRequirement: volumeRequirement ?? this.volumeRequirement,
+      customNote: customNote ?? this.customNote,
+      isVerified: isVerified ?? this.isVerified,
     );
   }
 }

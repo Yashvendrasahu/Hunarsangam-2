@@ -2,145 +2,111 @@
 
 import 'package:flutter/material.dart';
 
-/// Top bar with Back button, Step counter pill (e.g. "Step 1 of 5 • Artisan Setup"),
-/// and language selector pill.
 class OnboardingHeader extends StatelessWidget {
-  final int? currentStep;
-  final int totalSteps;
+  final String? title;
+  final String? subtitle;
   final String? stepLabel;
-  final String currentLanguage;
+  final int currentStep;
+  final int totalSteps;
   final VoidCallback? onBack;
-  final VoidCallback? onLanguageTap;
-  final bool showHelpIcon;
+  final String? currentLanguage;
 
   const OnboardingHeader({
     super.key,
-    this.currentStep,
-    this.totalSteps = 5,
+    this.title,
+    this.subtitle,
     this.stepLabel,
-    this.currentLanguage = 'English',
+    this.currentStep = 1,
+    this.totalSteps = 1,
     this.onBack,
-    this.onLanguageTap,
-    this.showHelpIcon = false,
+    this.currentLanguage,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Back or Brand icon button
-          if (onBack != null)
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF2D2421)),
-              onPressed: onBack,
-              splashRadius: 22.0,
-            )
-          else
-            Row(
-              children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (onBack != null)
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFF221C19)),
+                  onPressed: onBack,
+                )
+              else
+                const SizedBox(width: 40),
+              if (stepLabel != null)
+                Text(
+                  stepLabel!,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF6B584E),
+                  ),
+                ),
+              if (currentLanguage != null)
                 Container(
-                  width: 34.0,
-                  height: 34.0,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFFBF9),
-                    borderRadius: BorderRadius.circular(10.0),
-                    border: Border.all(color: const Color(0xFFE5D5CB)),
+                    color: const Color(0xFFF2ECE6),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  padding: const EdgeInsets.all(4.0),
-                  child: const Center(
-                    child: Text(
-                      'हुनर',
-                      style: TextStyle(
-                        fontSize: 10.0,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF7C3F24),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8.0),
-                const Text(
-                  'HunarSangam',
-                  style: TextStyle(
-                    fontSize: 17.0,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF7C3F24),
-                  ),
-                ),
-              ],
-            ),
-
-          // Step Pill (if in step sequence) or Onboarding Step Tag
-          if (currentStep != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 5.0),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDE8DF),
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 7.0,
-                    height: 7.0,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFD85A2A),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6.0),
-                  Text(
-                    'Step $currentStep of $totalSteps • ${stepLabel ?? "Craft Maker Setup"}',
+                  child: Text(
+                    currentLanguage!,
                     style: const TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF6B4232),
+                      color: Color(0xFFA84318),
                     ),
                   ),
-                ],
-              ),
-            ),
-
-          // Right Action (Language Dropdown or Help icon)
-          if (showHelpIcon)
-            IconButton(
-              icon: const Icon(Icons.help_outline_rounded, color: Color(0xFF6E5D53)),
-              onPressed: () {},
-            )
-          else
-            InkWell(
-              onTap: onLanguageTap,
-              borderRadius: BorderRadius.circular(20.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFDFB),
-                  borderRadius: BorderRadius.circular(20.0),
-                  border: Border.all(color: const Color(0xFFE5D5CB)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.translate_rounded, size: 14.0, color: Color(0xFF8C5338)),
-                    const SizedBox(width: 4.0),
-                    Text(
-                      currentLanguage.split(' ').first,
-                      style: const TextStyle(
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF4A3B32),
-                      ),
+                )
+              else
+                const SizedBox(width: 40),
+            ],
+          ),
+          if (totalSteps > 1) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: List.generate(totalSteps, (index) {
+                final isActive = index < currentStep;
+                return Expanded(
+                  child: Container(
+                    height: 4,
+                    margin: EdgeInsets.only(right: index < totalSteps - 1 ? 6 : 0),
+                    decoration: BoxDecoration(
+                      color: isActive ? const Color(0xFFA84318) : const Color(0xFFE2D6CC),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    const SizedBox(width: 2.0),
-                    const Icon(Icons.arrow_drop_down, size: 16.0, color: Color(0xFF6E5D53)),
-                  ],
-                ),
+                  ),
+                );
+              }),
+            ),
+          ],
+          if (title != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              title!,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF1F1612),
               ),
             ),
+          ],
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              subtitle!,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF6D4C41),
+              ),
+            ),
+          ],
         ],
       ),
     );

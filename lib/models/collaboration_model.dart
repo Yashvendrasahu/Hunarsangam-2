@@ -1,5 +1,31 @@
 // lib/models/collaboration_model.dart
 
+class CollaborationRequest {
+  final String id;
+  final String title;
+  final String craftCategory;
+  final String requesterName;
+  final String clusterLocation;
+  final String escrowAmount;
+  final String deadline;
+  final String status;
+  final int unitsNeeded;
+  final String compensationPerUnit;
+
+  const CollaborationRequest({
+    required this.id,
+    required this.title,
+    required this.craftCategory,
+    required this.requesterName,
+    required this.clusterLocation,
+    required this.escrowAmount,
+    required this.deadline,
+    this.status = 'Open',
+    this.unitsNeeded = 20,
+    this.compensationPerUnit = '₹450',
+  });
+}
+
 class CollaborationModel {
   final String id;
   final String artisanId;

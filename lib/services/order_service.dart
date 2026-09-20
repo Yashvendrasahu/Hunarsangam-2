@@ -143,7 +143,7 @@ class OrderService {
     final newOrder = OrderModel(
       id: 'ord_${DateTime.now().millisecondsSinceEpoch}',
       orderNumber: 'PO-2026-${(1000 + _orders.length * 111)}',
-      artisanId: req.artisanId,
+      artisanId: req.artisanId ?? '22222222-2222-2222-2222-222222222222',
       buyerName: req.buyerName,
       totalAmount: req.totalAmount,
       status: 'accepted',
@@ -155,8 +155,8 @@ class OrderService {
         OrderItemModel(
           id: 'item_${DateTime.now().millisecondsSinceEpoch}',
           orderId: 'ord_${DateTime.now().millisecondsSinceEpoch}',
-          productId: req.productId,
-          productName: req.productName,
+          productId: req.productId ?? 'prod_1',
+          productName: req.productName ?? req.title,
           quantity: req.quantity,
           price: req.unitPrice,
         ),

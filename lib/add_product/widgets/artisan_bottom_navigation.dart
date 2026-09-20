@@ -4,104 +4,72 @@ import 'package:flutter/material.dart';
 
 class ArtisanBottomNavigation extends StatelessWidget {
   final int currentIndex;
+  final ValueChanged<int>? onTabSelected;
   final ValueChanged<int>? onTap;
+  final VoidCallback? onBack;
 
   const ArtisanBottomNavigation({
     super.key,
-    this.currentIndex = 1, // Products tab active by default
+    this.currentIndex = 0,
+    this.onTabSelected,
     this.onTap,
+    this.onBack,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFDFB),
-        border: const Border(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
           top: BorderSide(color: Color(0xFFEADFD6), width: 1.0),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF7C3F24).withValues(alpha: 0.05),
-            offset: const Offset(0, -2),
-            blurRadius: 8.0,
-          ),
-        ],
       ),
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       child: SafeArea(
         top: false,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildNavItem(
-              index: 0,
-              icon: Icons.storefront_outlined,
-              selectedIcon: Icons.storefront_rounded,
-              label: 'Home',
-            ),
-            _buildNavItem(
-              index: 1,
-              icon: Icons.palette_outlined,
-              selectedIcon: Icons.palette_rounded,
-              label: 'Products',
-            ),
-            _buildNavItem(
-              index: 2,
-              icon: Icons.assignment_outlined,
-              selectedIcon: Icons.assignment_rounded,
-              label: 'Orders',
-            ),
-            _buildNavItem(
-              index: 3,
-              icon: Icons.groups_outlined,
-              selectedIcon: Icons.groups_rounded,
-              label: 'Collaborate',
-            ),
-            _buildNavItem(
-              index: 4,
-              icon: Icons.person_outline_rounded,
-              selectedIcon: Icons.person_rounded,
-              label: 'Profile',
-            ),
+            _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
+            _buildNavItem(1, Icons.inventory_2_outlined, Icons.inventory_2, 'Products'),
+            _buildNavItem(2, Icons.receipt_long_outlined, Icons.receipt_long, 'Orders'),
+            _buildNavItem(3, Icons.groups_outlined, Icons.groups, 'Guild'),
+            _buildNavItem(4, Icons.chat_bubble_outline, Icons.chat_bubble, 'Messages'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavItem({
-    required int index,
-    required IconData icon,
-    required IconData selectedIcon,
-    required String label,
-  }) {
-    final bool isSelected = currentIndex == index;
+  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
+    final isSelected = currentIndex == index;
+    const activeColor = Color(0xFFA84318);
+    const inactiveColor = Color(0xFF8D6E63);
 
-    return GestureDetector(
-      onTap: () => onTap?.call(index),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFE8DC) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20.0),
-        ),
+    return InkWell(
+      onTap: () {
+        onTabSelected?.call(index);
+        onTap?.call(index);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isSelected ? selectedIcon : icon,
-              color: isSelected ? const Color(0xFF8C3A16) : const Color(0xFF6B584E),
-              size: 22.0,
+              isSelected ? activeIcon : icon,
+              color: isSelected ? activeColor : inactiveColor,
+              size: 22,
             ),
-            const SizedBox(height: 2.0),
+            const SizedBox(height: 3),
             Text(
               label,
               style: TextStyle(
-                fontSize: 10.5,
+                fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                color: isSelected ? const Color(0xFF8C3A16) : const Color(0xFF6B584E),
+                color: isSelected ? activeColor : inactiveColor,
               ),
             ),
           ],
