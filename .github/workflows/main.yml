@@ -1,4 +1,4 @@
-name: Build Android APK & Deploy Web
+name: Build Android APK & Web
 
 on:
   push:
@@ -7,9 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 
 jobs:
   build-apk:
@@ -53,7 +51,7 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
 
   build-web:
-    name: Build & Deploy Flutter Web
+    name: Build Flutter Web
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -72,29 +70,13 @@ jobs:
 
       - name: Build Flutter Web
         run: |
-          flutter build web --release --base-href "/Hunarsangam-2/" \
+          flutter build web --release \
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
             --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
 
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
+      - name: Upload Web Artifact
+        uses: actions/upload-artifact@v4
         with:
-          enablement: true
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
+          name: hunarsangam-web
           path: build/web
-
-  deploy-web:
-    name: Deploy to GitHub Pages
-    needs: build-web
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
