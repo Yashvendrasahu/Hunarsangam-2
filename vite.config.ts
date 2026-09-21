@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  root: 'web',
   server: {
     port: 3000,
     host: '0.0.0.0',
@@ -8,7 +9,8 @@ export default defineConfig({
     watch: process.env.DISABLE_HMR === 'true' ? null : {},
   },
   build: {
-    outDir: 'dist',
+    outDir: '../dist',
     emptyOutDir: true,
   },
 });
+

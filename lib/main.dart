@@ -26,6 +26,7 @@ import 'screens/buyer_artisan_profile_screen.dart';
 import 'screens/buyer_business_sourcing_screen.dart';
 import 'screens/buyer_requirements_screen.dart';
 import 'screens/buyer_voice_requirement_screen.dart';
+import 'screens/buyer_requirement_step2_screen.dart';
 import 'screens/buyer_requirement_review_screen.dart';
 import 'screens/buyer_reference_image_screen.dart';
 import 'screens/buyer_review_match_screen.dart';
@@ -385,7 +386,7 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
       );
     }
 
-    // Screen r2: Voice Post Bulk Requirement (matching r2- bulk — Voice Post Bulk Requirement.png)
+    // Screen r2: Voice Post Bulk Requirement (matching r2- bulk — Voice-First Requirement Description.png)
     if (_buyerStep == 13) {
       return BuyerVoiceRequirementScreen(
         onBack: () => setState(() => _buyerStep = 12),
@@ -393,21 +394,25 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
         onOpenRequirements: () => setState(() => _buyerStep = 12),
         onOpenDiscover: () => setState(() => _buyerStep = 6),
         onOpenHome: () => setState(() => _buyerStep = 5),
+        onOpenOrders: () => setState(() => _buyerStep = 20),
+        onOpenProfile: () => setState(() => _buyerStep = 21),
       );
     }
 
-    // Screen r3: Create Bulk Requirement Review (matching r3-bulk — Create Bulk Requirement review.png)
+    // Screen r7-bulk: Post Bulk Requirement Step 2 of 3 (matching r7-bulk ai artisan matching in bulk side.png)
     if (_buyerStep == 14) {
-      return BuyerRequirementReviewScreen(
+      return BuyerRequirementStep2Screen(
         onBack: () => setState(() => _buyerStep = 13),
         onContinue: () => setState(() => _buyerStep = 15),
         onOpenRequirements: () => setState(() => _buyerStep = 12),
         onOpenDiscover: () => setState(() => _buyerStep = 6),
         onOpenHome: () => setState(() => _buyerStep = 5),
+        onOpenOrders: () => setState(() => _buyerStep = 20),
+        onOpenProfile: () => setState(() => _buyerStep = 21),
       );
     }
 
-    // Screen r4: Reference Image Upload (matching r4- bulk — Reference Image.png)
+    // Screen r4: Reference Image Upload (matching r4- bulk  — Reference Image.png)
     if (_buyerStep == 15) {
       return BuyerReferenceImageScreen(
         onBack: () => setState(() => _buyerStep = 14),
@@ -416,41 +421,51 @@ class _OnboardingFlowCoordinatorState extends State<OnboardingFlowCoordinator> {
         onOpenRequirements: () => setState(() => _buyerStep = 12),
         onOpenDiscover: () => setState(() => _buyerStep = 6),
         onOpenHome: () => setState(() => _buyerStep = 5),
+        onOpenOrders: () => setState(() => _buyerStep = 20),
+        onOpenProfile: () => setState(() => _buyerStep = 21),
       );
     }
 
-    // Screen r5: Review & Match (matching r5-bulk — Find Artisan Matches.png)
+    // Screen r3: Create Bulk Requirement Review (matching r3-bulk — Create Bulk Requirement review.png)
     if (_buyerStep == 16) {
-      return BuyerReviewMatchScreen(
+      return BuyerRequirementReviewScreen(
         onBack: () => setState(() => _buyerStep = 15),
-        onPublishAndFind: () => setState(() => _buyerStep = 17),
+        onContinue: () => setState(() => _buyerStep = 17),
         onOpenRequirements: () => setState(() => _buyerStep = 12),
         onOpenDiscover: () => setState(() => _buyerStep = 6),
         onOpenHome: () => setState(() => _buyerStep = 5),
+        onOpenOrders: () => setState(() => _buyerStep = 20),
+        onOpenProfile: () => setState(() => _buyerStep = 21),
       );
     }
 
-    // Screen r6: Matched Artisans (matching r6-bulk — Artisan Match & Comparison.png)
+    // Screen r5: Matched Artisans (matching r5-bulk— Find Artisan Matches.png)
     if (_buyerStep == 17) {
       return BuyerMatchedArtisansScreen(
         onBack: () => setState(() => _buyerStep = 16),
         onCompare: () => setState(() => _buyerStep = 18),
         onViewArtisan: (id) => setState(() => _buyerStep = 19),
+        onMessageArtisan: (id) => setState(() => _buyerStep = 23),
+        onPlaceOrder: (id) => setState(() => _buyerStep = 20),
         onOpenRequirements: () => setState(() => _buyerStep = 12),
         onOpenDiscover: () => setState(() => _buyerStep = 6),
         onOpenHome: () => setState(() => _buyerStep = 5),
+        onOpenOrders: () => setState(() => _buyerStep = 20),
+        onOpenProfile: () => setState(() => _buyerStep = 21),
       );
     }
 
-    // Screen r7: Compare Artisans (matching r7-bulk ai artisan matching in bulk side.png)
+    // Screen r6: Compare Artisans (matching r6-bulk — Artisan Match & Comparison.png)
     if (_buyerStep == 18) {
       return BuyerCompareArtisansScreen(
         onBack: () => setState(() => _buyerStep = 17),
-        onSelectArtisan: (id) => setState(() => _buyerStep = 19),
-        onMessageArtisans: () => setState(() => _buyerStep = 19),
+        onSelectArtisan: (id) => setState(() => _buyerStep = 20),
+        onMessageArtisans: () => setState(() => _buyerStep = 23),
         onOpenRequirements: () => setState(() => _buyerStep = 12),
         onOpenDiscover: () => setState(() => _buyerStep = 6),
         onOpenHome: () => setState(() => _buyerStep = 5),
+        onOpenOrders: () => setState(() => _buyerStep = 20),
+        onOpenProfile: () => setState(() => _buyerStep = 21),
       );
     }
 

@@ -3,11 +3,14 @@
 import 'dart:async';
 import '../models/product_model.dart';
 import '../add_product/models/product_draft.dart';
+import 'supabase_service.dart';
 
 class ProductService {
   static final ProductService _instance = ProductService._internal();
   factory ProductService() => _instance;
-  ProductService._internal();
+  ProductService._internal() {
+    _initProducts();
+  }
 
   final _productsStreamController = StreamController<List<ProductModel>>.broadcast();
   Stream<List<ProductModel>> get productsStream => _productsStreamController.stream;
@@ -47,11 +50,21 @@ class ProductService {
     ),
   ];
 
+  Future<void> _initProducts() async {
+    final remote = await SupabaseService().fetchProducts();
+    if (remote.isNotEmpty) {
+      _products.clear();
+      _products.addAll(remote);
+      _productsStreamController.add(List.unmodifiable(_products));
+    }
+  }
+
   List<ProductModel> getProducts() => List.unmodifiable(_products);
 
   Future<void> addProduct(ProductModel product) async {
     _products.add(product);
     _productsStreamController.add(List.unmodifiable(_products));
+    await SupabaseService().insertProduct(product);
   }
 
   Future<void> createProductFromDraft(ProductDraft draft) async {

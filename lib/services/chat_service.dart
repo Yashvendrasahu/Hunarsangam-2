@@ -2,12 +2,14 @@
 
 import 'dart:async';
 import '../models/chat_models.dart';
+import 'gemini_service.dart';
 
 class ChatService {
   static final ChatService _instance = ChatService._internal();
   factory ChatService() => _instance;
   ChatService._internal();
 
+  final GeminiService _gemini = GeminiService();
   final _unreadController = StreamController<int>.broadcast();
   Stream<int> get unreadCountStream => _unreadController.stream;
 
@@ -21,7 +23,7 @@ class ChatService {
         senderName: 'FabIndia Retail Ltd.',
         senderType: 'buyer',
         content: 'Namaste! We reviewed your bamboo fruit basket catalog and would like to place an initial bulk order.',
-        translatedContent: 'नमस्ते! हमने आपकी टोकरी कैटलॉग की समीक्षा की है और प्रारंभिक थोक आदेश देना चाहते हैं।',
+        translatedContent: 'नमस्ते! हमने आपकी बांस की टोकरी कैटलॉग की समीक्षा की है और प्रारंभिक थोक ऑर्डर देना चाहते हैं।',
         timestamp: DateTime.now().subtract(const Duration(hours: 3)),
         isMe: false,
       ),
@@ -31,7 +33,7 @@ class ChatService {
         senderName: 'Ramu Kumar',
         senderType: 'artisan',
         content: 'Namaste! Thank you. We can produce 120 units within 2 weeks with verified quality checks.',
-        translatedContent: 'Thank you! We can produce 120 units within 2 weeks.',
+        translatedContent: 'Thank you! We can produce 120 units within 2 weeks with verified quality checks.',
         timestamp: DateTime.now().subtract(const Duration(hours: 2)),
         isMe: true,
       ),
@@ -64,13 +66,21 @@ class ChatService {
     bool isAudio = false,
     String? audioDuration,
   }) async {
+    String translated = '';
+    try {
+      final targetLang = senderType == 'buyer' ? 'Hindi' : 'English';
+      translated = await _gemini.translateText(text: content, targetLanguage: targetLang);
+    } catch (_) {
+      translated = 'AI Translated: $content';
+    }
+
     final msg = ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       senderId: senderId,
       senderName: senderName,
       senderType: senderType,
       content: content,
-      translatedContent: 'AI Translated: $content',
+      translatedContent: translated.isNotEmpty ? translated : content,
       timestamp: DateTime.now(),
       isMe: senderType == 'artisan',
       isAudio: isAudio,

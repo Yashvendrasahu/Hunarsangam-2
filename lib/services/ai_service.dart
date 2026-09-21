@@ -1,6 +1,7 @@
 // lib/services/ai_service.dart
 
 import '../add_product/models/product_draft.dart';
+import 'gemini_service.dart';
 
 class AiCatalogResult {
   final String productName;
@@ -35,15 +36,21 @@ class AiService {
   factory AiService() => _instance;
   AiService._internal();
 
+  final GeminiService _gemini = GeminiService();
+
   Future<ProductDraft> generateProductDetailsFromVoice(String voiceTranscript, ProductDraft currentDraft) async {
-    // Simulates AI catalog generation from voice description
+    final aiResult = await _gemini.generateCraftCatalog(
+      voiceTranscript: voiceTranscript,
+      craftType: currentDraft.category.isNotEmpty ? currentDraft.category : 'Terracotta & Ceramics',
+    );
+
     return currentDraft.copyWith(
-      title: 'Handcrafted Terracotta Decorative Urn',
-      description: 'Hand-thrown natural earthen clay vessel with artisan relief patterns and authentic kiln finish.',
-      category: 'Pottery & Ceramics',
-      basePrice: 850.0,
-      material: 'Terracotta Clay',
-      finishAndColor: 'Natural Terracotta Red',
+      title: aiResult['title'] ?? 'Handcrafted Terracotta Decorative Urn',
+      description: aiResult['description'] ?? 'Hand-thrown natural earthen clay vessel with artisan relief patterns.',
+      category: aiResult['category'] ?? (currentDraft.category.isNotEmpty ? currentDraft.category : 'Pottery & Ceramics'),
+      basePrice: (aiResult['suggestedPrice'] as num?)?.toDouble() ?? 850.0,
+      material: aiResult['material'] ?? 'Terracotta Clay',
+      finishAndColor: aiResult['finishAndColor'] ?? 'Natural Terracotta Red',
     );
   }
 
@@ -53,19 +60,23 @@ class AiService {
     required Map<String, dynamic> dimensions,
     required String photoUrl,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    final ai = await _gemini.generateCraftCatalog(
+      voiceTranscript: voiceTranscription,
+      craftType: craftType.isNotEmpty ? craftType : 'Bamboo & Cane Weaving',
+    );
+
     return AiCatalogResult(
-      productName: 'Handmade Woven Bamboo Fruit Basket',
-      category: craftType.isNotEmpty ? craftType : 'Bamboo & Cane Weaving',
-      description: 'Handwoven natural bamboo storage basket crafted using traditional heritage weaving techniques.',
-      material: 'Natural Assam Golden Bamboo',
-      finishAndColor: 'Honey Gold Polish',
-      diameterIn: (dimensions['diameter'] as num?)?.toDouble() ?? 12.0,
-      heightIn: (dimensions['height'] as num?)?.toDouble() ?? 8.5,
-      estWeightGrams: 420.0,
-      suggestedPrice: 320.0,
-      giCluster: 'Barabanki Bamboo Cluster (UP)',
-      giRegNumber: 'GI-429',
+      productName: ai['title'] ?? 'Handmade Woven Bamboo Fruit Basket',
+      category: ai['category'] ?? (craftType.isNotEmpty ? craftType : 'Bamboo & Cane Weaving'),
+      description: ai['description'] ?? 'Handwoven natural bamboo storage basket crafted using traditional heritage weaving techniques.',
+      material: ai['material'] ?? 'Natural Assam Golden Bamboo',
+      finishAndColor: ai['finishAndColor'] ?? 'Honey Gold Polish',
+      diameterIn: (ai['diameterIn'] as num?)?.toDouble() ?? ((dimensions['diameter'] as num?)?.toDouble() ?? 12.0),
+      heightIn: (ai['heightIn'] as num?)?.toDouble() ?? ((dimensions['height'] as num?)?.toDouble() ?? 8.5),
+      estWeightGrams: (ai['weightGrams'] as num?)?.toDouble() ?? 420.0,
+      suggestedPrice: (ai['suggestedPrice'] as num?)?.toDouble() ?? 320.0,
+      giCluster: ai['giCluster'] ?? 'Barabanki Bamboo Cluster (UP)',
+      giRegNumber: ai['giRegNumber'] ?? 'GI-429',
     );
   }
 
@@ -74,8 +85,14 @@ class AiService {
     required double laborHours,
     required double hourlyWage,
     double markupMargin = 0.25,
+    String craftType = 'Handicrafts',
   }) async {
-    final directCost = materialCost + (laborHours * hourlyWage);
-    return directCost * (1 + markupMargin);
+    final result = await _gemini.calculateFairPrice(
+      rawMaterialCost: materialCost,
+      hoursWorked: laborHours,
+      hourlyWage: hourlyWage,
+      craftType: craftType,
+    );
+    return (result['fairPrice'] as num?)?.toDouble() ?? ((materialCost + (laborHours * hourlyWage)) * (1 + markupMargin));
   }
 }
